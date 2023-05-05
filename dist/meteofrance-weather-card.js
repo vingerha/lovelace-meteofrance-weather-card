@@ -256,7 +256,7 @@ class MeteofranceWeatherCard extends LitElement {
 
   renderCurrent(stateObj) {
     this.numberElements++;
-    now = new Date();
+    let now = new Date();
     return html`
       <ul class="flow-row current">
         <li
