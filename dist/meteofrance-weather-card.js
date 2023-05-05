@@ -256,19 +256,17 @@ class MeteofranceWeatherCard extends LitElement {
 
   renderCurrent(stateObj) {
     this.numberElements++;
+    now = new Date();
     return html`
       <ul class="flow-row current">
         <li
           style="background: none, url('${this.getWeatherIcon(
             stateObj.state.toLowerCase(),
-            this.isNightTime(daily.datetime)
+            this.isNightTime(now)
           )}') no-repeat; background-size: contain;"
         ></li>
         <li>
-          ${this.getPhenomenaText(
-            stateObj.state,
-            this.isNightTime(daily.datetime)
-          )}
+          ${this.getPhenomenaText(stateObj.state, this.isNightTime(now))}
           ${this._config.name ? html` <div>${this._config.name}</div>` : ""}
         </li>
         <li>
@@ -493,7 +491,7 @@ class MeteofranceWeatherCard extends LitElement {
           class="icon"
           style="background: none, url('${this.getWeatherIcon(
             daily.condition.toLowerCase(),
-            !isDaily && this.isNightTime(daily.datetime)
+            !isDaily && this.isNightTime(new Date(daily.datetime))
           )}') no-repeat; background-size: contain"
         ></li>
         <li class="highTemp">
@@ -552,7 +550,7 @@ class MeteofranceWeatherCard extends LitElement {
     let nextrising = new Date(sun.attributes.next_rising);
     let nextsetting = new Date(sun.attributes.next_setting);
 
-    const thistime = datetimehourly ? new Date(datetimehourly) : new Date();
+    const thistime = datetimehourly ? datetimehourly : new Date();
 
     return (
       (thistime > nextsetting && thistime < nextrising) ||
@@ -720,7 +718,7 @@ class MeteofranceWeatherCard extends LitElement {
       "/local/community/lovelace-meteofrance-weather-card/icons/" +
       this.isSelected(this._config.static_icons)
         ? "static/"
-        : "/animated/";
+        : "animated/";
     return `${this._config.icons ? this._config.icons : icons_path}${
       isNight ? weatherIconsNight[condition] : weatherIconsDay[condition]
     }.svg`;

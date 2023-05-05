@@ -176,7 +176,7 @@ export class MeteofranceWeatherCardEditor extends LitElement {
             ${this.renderSwitchOption(
               "Use static icons",
               this._static_icons,
-              "static_icon"
+              "static_icons"
             )}
           </ul>
           <!-- -->
