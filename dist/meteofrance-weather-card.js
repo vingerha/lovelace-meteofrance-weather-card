@@ -718,7 +718,7 @@ class MeteofranceWeatherCard extends LitElement {
         ? this._config.icons
         : "/local/community/lovelace-meteofrance-weather-card/icons/"
     }${isNight ? weatherIconsNight[condition] : weatherIconsDay[condition]}${
-      this.isSelected(this._config.static_icons) ? "-static" : ""
+      this.isSelected(this._config.animated_icons) ? "" : "-static"
     }.svg`;
   }
 

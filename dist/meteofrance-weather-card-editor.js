@@ -82,8 +82,8 @@ export class MeteofranceWeatherCardEditor extends LitElement {
     return this._config.alert_forecast !== false;
   }
 
-  get _static_icons() {
-    return this._config.static_icons !== false;
+  get _animated_icons() {
+    return this._config.animated_icons !== false;
   }
 
   // Config value
@@ -174,9 +174,9 @@ export class MeteofranceWeatherCardEditor extends LitElement {
               "forecast"
             )}
             ${this.renderSwitchOption(
-              "Use static icons",
-              this._static_icons,
-              "static_icons"
+              "Use animated icons",
+              this._animated_icons,
+              "animated_icons"
             )}
           </ul>
           <!-- -->
