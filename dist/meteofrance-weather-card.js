@@ -530,6 +530,20 @@ class MeteofranceWeatherCard extends LitElement {
               </li>
             `
           : ""}
+        ${this._config.wind_forecast_icons && daily.wind_bearing !== undefined && daily.wind_bearing !== null
+          ? html`			
+			<li class="icon"
+				style="background: none, url('/local/community/lovelace-meteofrance-weather-card/icons/arrow-north-static.svg'); background-size: contain; transform: rotate(${daily.wind_bearing + 180}deg) scale(0.5)">
+			  </li>
+			  `
+           : ""}
+	 ${this._config.wind_forecast_icons && daily.wind_bearing !== undefined && daily.wind_bearing == null
+          ? html`			
+			<li class="icon"
+				style="background: none, url('/local/community/lovelace-meteofrance-weather-card/icons/no-wind-bearing-static.svg'); background-size: contain; transform:  scale(0.5)">
+			  </li>
+			  `
+           : ""}
       </ul>
     </li>`;
   }

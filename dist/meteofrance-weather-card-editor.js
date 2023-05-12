@@ -86,6 +86,9 @@ export class MeteofranceWeatherCardEditor extends LitElement {
     return this._config.animated_icons !== false;
   }
 
+  get _wind_forecast_icons() {
+    return this._config.wind_forecast_icons !== false;
+  }
   // Config value
   get _alertEntity() {
     return this._config.alertEntity || "";
@@ -178,6 +181,11 @@ export class MeteofranceWeatherCardEditor extends LitElement {
               this._animated_icons,
               "animated_icons"
             )}
+            ${this.renderSwitchOption(
+              "Show wind icons",
+              this._wind_forecast_icons,
+              "wind_forecast_icons"
+            )}			
           </ul>
           <!-- -->
           <paper-input
