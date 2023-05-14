@@ -163,6 +163,8 @@ Projet réalisé par la communauté de HACF et depuis les projets suivants :
 
 - les améliorations spécifiques à Météo France de la carte [Lovelace animated weather card](https://github.com/Imbuzi/meteo-france-weather-card) de [Nicolas Bourasseau](https://github.com/Imbuzi).
 
+Les icônes animés sont issus du site [amChart](https://www.amcharts.com/free-animated-svg-weather-icons/) et sous licence [CC by 4.0](https://creativecommons.org/licenses/by/4.0/).
+
 ## FAQ
 
 - **Question** : La prévision de pluie dans l'heure ne semble pas fonctionner, les cases sont toujours de la même couleur bien que le temps est changeant et pluvieux.
