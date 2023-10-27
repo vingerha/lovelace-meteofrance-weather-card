@@ -93,6 +93,10 @@ export class MeteofranceWeatherCardEditor extends LitElement {
   get _wind_forecast_icons() {
     return this._config.wind_forecast_icons !== false;
   }
+  
+  get _humidity_forecast() {
+    return this._config.humidity_forecast !== false;
+  }  
   // Config value
   get _alertEntity() {
     return this._config.alertEntity || "";
@@ -189,7 +193,12 @@ export class MeteofranceWeatherCardEditor extends LitElement {
               "Show wind icons",
               this._wind_forecast_icons,
               "wind_forecast_icons"
-            )}			
+            )}	
+            ${this.renderSwitchOption(
+              "Show humidity forecast",
+              this._humidity_forecast,
+              "humidity_forecast"
+            )}					
           </ul>
           <!-- -->
           <paper-input

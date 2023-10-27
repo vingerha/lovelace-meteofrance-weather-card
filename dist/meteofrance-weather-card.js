@@ -513,6 +513,16 @@ class MeteofranceWeatherCard extends LitElement {
               </li>
             `
           : ""}
+        ${this._config.humidity_forecast &&
+        daily.humidity !== undefined &&
+        daily.humidity !== null
+          ? html`
+              <li class="humidity">
+                ${Math.round(daily.humidity)}
+                ${this.getUnit("humidity")}
+              </li>
+            `
+          : ""}
         ${!this._config.hide_precipitation &&
         daily.precipitation_probability !== undefined &&
         daily.precipitation_probability !== null
@@ -522,7 +532,7 @@ class MeteofranceWeatherCard extends LitElement {
                 ${this.getUnit("precipitation_probability")}
               </li>
             `
-          : ""}
+          : ""}		  
         ${daily.wind_speed !== undefined && daily.wind_speed !== null
           ? html`
               <li class="wind_speed">
@@ -752,6 +762,8 @@ class MeteofranceWeatherCard extends LitElement {
       case "precipitation":
         return lengthUnit === "km" ? "mm" : "in";
       case "precipitation_probability":
+        return "%";
+	  case "humidity":
         return "%";
       case "speed":
         return lengthUnit === "km" ? "km/h" : "mph";
