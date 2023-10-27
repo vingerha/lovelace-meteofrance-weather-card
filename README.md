@@ -40,7 +40,10 @@ Cette carte est prévue pour utiliser les entités de l'intégration [Météo Fr
 
 #### Installation de la carte
 
-1. Depuis [HACS](https://hacs.xyz/) (Home Assistant Community Store), sléectionner `Frontend`. Puis ouvrez le menu en haut à droite et utiliser l'option `Dépôts personnalisés` pour ajouter le dépôt de la carte.
+[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=hacf-fr&repository=lovelace-meteofrance-weather-card&category=lovelace)
+Si le lien a fonctionné, passez directement à l'étape 3. Sinon, procédez comme suit :
+
+1. Depuis [HACS](https://hacs.xyz/) (Home Assistant Community Store), sélectionner `Frontend`. Puis ouvrez le menu en haut à droite et utiliser l'option `Dépôts personnalisés` pour ajouter le dépôt de la carte.
 
 2. Ajoutez l'adresse <https://github.com/hacf-fr/lovelace-meteofrance-weather-card> avec pour catégorie `Lovelace`, et faire `AJOUTER`. Le dépôt de la carte apparaît dans la liste.
 
