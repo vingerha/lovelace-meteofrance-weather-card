@@ -28,7 +28,7 @@ Les informations affichées :
 
 Un exemple de rendu :
 
-![Weather Card](https://github.com/hacf-fr/lovelace-meteofrance-weather-card/blob/Meteo-France/meteofrance-weather-card.png)
+![Weather Card](meteofrance-weather-card.png)
 
 ## Installation
 
@@ -69,7 +69,7 @@ Une fois choisi, sa configuration est la suivante :
 
 5. `Enregistrer` votre configuration.
 
-![Weather Card Configuration](https://github.com/hacf-fr/lovelace-meteofrance-weather-card/blob/Meteo-France/meteofrance-weather-card-editor.png)
+![Weather Card Configuration](meteofrance-weather-card-editor.png)
 
 ### Installation manuelle (utilisateurs avancés)
 

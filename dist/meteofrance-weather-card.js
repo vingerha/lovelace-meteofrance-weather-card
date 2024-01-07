@@ -195,15 +195,38 @@ class MeteofranceWeatherCard extends LitElement {
     return entities;
   }
 
+  isDailyForecast(forecast) {
+    const diff =
+      new Date(forecast[1].datetime) - new Date(forecast[0].datetime);
+    return diff > 3600000;
+  }
+
   // Upgrade config fields if necessary
   upgradeConfig(config) {
-    const upgradedConfig = { ...config }
-    // Deduce "daily_forecast" from deprecated "forecast"
-    if (config["forecast"] !== undefined && config["daily_forecast"] === undefined) {
-      upgradedConfig["daily_forecast"] = config["forecast"];
-    }
-    if (config["number_of_forecasts"] !== undefined && config["number_of_daily_forecasts"] === undefined) {
-      upgradedConfig["number_of_daily_forecasts"] = config["number_of_forecasts"];
+    const upgradedConfig = { ...config };
+    if (this.hass !== undefined) {
+      const stateObj = this.hass.states[this._config.entity];
+      if (stateObj !== undefined && stateObj.attributes.forecast !== undefined) {
+        // Deduce "daily_forecast" & "hourly_forecast" from deprecated "forecast"
+        if (this.isDailyForecast(stateObj.attributes.forecast)) {
+          if (config["forecast"] !== undefined && config["daily_forecast"] === undefined) {
+            upgradedConfig["daily_forecast"] = config["forecast"];
+            upgradedConfig["hourly_forecast"] = "false";
+          }
+          if (config["number_of_forecasts"] !== undefined && config["number_of_daily_forecasts"] === undefined) {
+            upgradedConfig["number_of_daily_forecasts"] = config["number_of_forecasts"];
+          }
+        }
+        else {
+          if (config["forecast"] !== undefined && config["hourly_forecast"] === undefined) {
+            upgradedConfig["daily_forecast"] = "false";
+            upgradedConfig["hourly_forecast"] = config["forecast"];
+          }
+          if (config["number_of_forecasts"] !== undefined && config["number_of_hourly_forecasts"] === undefined) {
+            upgradedConfig["number_of_hourly_forecasts"] = config["number_of_forecasts"];
+          }
+        }
+      }
     }
     return upgradedConfig;
   }
