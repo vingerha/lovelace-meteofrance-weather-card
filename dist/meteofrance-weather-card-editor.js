@@ -56,93 +56,93 @@ export class MeteofranceWeatherCardEditor extends LitElement {
   }
 
   get _entity() {
-    return this._config.entity || "";
+    return this._config?.entity || "";
   }
 
   get _name() {
-    return this._config.name || "";
+    return this._config?.name || "";
   }
 
   get _icons() {
-    return this._config.icons || "";
+    return this._config?.icons || "";
   }
 
   get _current() {
-    return this._config.current !== false;
+    return this._config?.current !== false;
   }
 
   get _details() {
-    return this._config.details !== false;
+    return this._config?.details !== false;
   }
 
   get _daily_forecast() {
-    return this._config.daily_forecast !== false;
+    return this._config?.daily_forecast !== false;
   }
 
   get _number_of_daily_forecasts() {
-    return this._config.number_of_daily_forecasts || 5;
+    return this._config?.number_of_daily_forecasts || 5;
   }
 
   get _hourly_forecast() {
-    return this._config.hourly_forecast !== false;
+    return this._config?.hourly_forecast !== false;
   }
 
   get _number_of_hourly_forecasts() {
-    return this._config.number_of_hourly_forecasts || 5;
+    return this._config?.number_of_hourly_forecasts || 5;
   }
 
   // Météo France
   // Switches state
   get _one_hour_forecast() {
-    return this._config.one_hour_forecast !== false;
+    return this._config?.one_hour_forecast !== false;
   }
 
   get _alert_forecast() {
-    return this._config.alert_forecast !== false;
+    return this._config?.alert_forecast !== false;
   }
 
   get _animated_icons() {
-    return this._config.animated_icons !== false;
+    return this._config?.animated_icons !== false;
   }
 
   get _wind_forecast_icons() {
-    return this._config.wind_forecast_icons !== false;
+    return this._config?.wind_forecast_icons !== false;
   }
   
   get _humidity_forecast() {
-    return this._config.humidity_forecast !== false;
+    return this._config?.humidity_forecast !== false;
   }  
 
   get _alertEntity() {
-    return this._config.alertEntity || "";
+    return this._config?.alertEntity || "";
   }
 
   get _cloudCoverEntity() {
-    return this._config.cloudCoverEntity || "";
+    return this._config?.cloudCoverEntity || "";
   }
 
   get _freezeChanceEntity() {
-    return this._config.freezeChanceEntity || "";
+    return this._config?.freezeChanceEntity || "";
   }
 
   get _rainChanceEntity() {
-    return this._config.rainChanceEntity || "";
+    return this._config?.rainChanceEntity || "";
   }
 
   get _rainForecastEntity() {
-    return this._config.rainForecastEntity || "";
+    return this._config?.rainForecastEntity || "";
   }
 
   get _snowChanceEntity() {
-    return this._config.snowChanceEntity || "";
+    return this._config?.snowChanceEntity || "";
   }
 
   get _uvEntity() {
-    return this._config.uvEntity || "";
+    return this._config?.uvEntity || "";
   }
 
   get _detailEntity() {
-    return this._config.detailEntity || "";
+    return this._config?.detailEntity || "";
   }
 
   firstUpdated() {
