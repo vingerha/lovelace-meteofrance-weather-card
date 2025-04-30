@@ -607,16 +607,6 @@ class MeteofranceWeatherCard extends LitElement {
         <li>
           ${isDaily
             ? new Date(daily.datetime).toLocaleDateString(lang, {
-                weekday: "short",
-              })
-            : new Date(daily.datetime).toLocaleDateString(lang, {
-                weekday: "short",
-                day: "numeric",
-              })}
-        </li>
-        <li>
-          ${isDaily
-            ? new Date(daily.datetime).toLocaleDateString(lang, {
                 day: "numeric",
                 month: "short",
               })
@@ -644,7 +634,8 @@ class MeteofranceWeatherCard extends LitElement {
           : ""}
         ${!this._config.hide_precipitation &&
         daily.precipitation !== undefined &&
-        daily.precipitation !== null
+        daily.precipitation !== null &&
+        this.isSelected(this._config.hourly_forecast_details)
           ? html`
               <li class="precipitation">
                 ${Math.round(daily.precipitation * 10) / 10}
@@ -654,7 +645,8 @@ class MeteofranceWeatherCard extends LitElement {
           : ""}
         ${this.isSelected(this._config.humidity_forecast) &&
         daily.humidity !== undefined &&
-        daily.humidity !== null
+        daily.humidity !== null &&
+        this.isSelected(this._config.hourly_forecast_details)
           ? html`
               <li class="humidity">
                 ${Math.round(daily.humidity)}
@@ -672,7 +664,7 @@ class MeteofranceWeatherCard extends LitElement {
               </li>
             `
           : ""}		  
-        ${daily.wind_speed !== undefined && daily.wind_speed !== null
+        ${daily.wind_speed !== undefined && daily.wind_speed !== null && this.isSelected(this._config.hourly_forecast_details)
           ? html`
               <li class="wind_speed">
                 ${Math.round(daily.wind_speed)} ${this.getUnit("speed")}
