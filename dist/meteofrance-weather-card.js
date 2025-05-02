@@ -604,17 +604,11 @@ class MeteofranceWeatherCard extends LitElement {
   renderDailyForecast(daily, lang, isDaily) {
     return html` <li>
       <ul class="flow-column day">
-        <li>
-          ${isDaily
-            ? new Date(daily.datetime).toLocaleDateString(lang, {
-                weekday: "short",
-              })
-            : ""}
-        </li>
 	<li>
           ${isDaily
             ? new Date(daily.datetime).toLocaleDateString(lang, {
-                day: "numeric",
+                weekday: "short",
+		day: "numeric",
                 month: "short",
               })
             : new Date(daily.datetime).toLocaleTimeString(lang, {
