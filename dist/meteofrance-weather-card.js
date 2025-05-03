@@ -609,7 +609,7 @@ class MeteofranceWeatherCard extends LitElement {
             ? new Date(daily.datetime).toLocaleDateString(lang, {
                 weekday: "short",
 		day: "numeric",
-                month: "short",
+//                month: "short",
               })
             : new Date(daily.datetime).toLocaleTimeString(lang, {
                 hour: "2-digit",
