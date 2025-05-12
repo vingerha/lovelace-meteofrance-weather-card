@@ -950,7 +950,7 @@ class MeteofranceWeatherCard extends LitElement {
       .ha-icon {
         height: 0.8em;
         margin-right: 5px;
-        color: var(--paper-item-icon-color);
+        color: var(--state-icon-color);
       }
 
       /* Current Forecast */
@@ -995,7 +995,7 @@ class MeteofranceWeatherCard extends LitElement {
       .details ha-icon {
         height: 22px;
         margin-right: 5px;
-        color: var(--paper-item-icon-color);
+        color: var(--state-icon-color);
       }
 
       .details > li {
@@ -1019,7 +1019,7 @@ class MeteofranceWeatherCard extends LitElement {
       }
 
       .oneHour > li {
-        background-color: var(--paper-item-icon-color);
+        background-color: var(--state-icon-color);
         border-right: 1px solid
           var(--lovelace-background, var(--primary-background-color));
       }
@@ -1072,7 +1072,7 @@ class MeteofranceWeatherCard extends LitElement {
 
       .alertForecast > div {
         flex: 1;
-        color: var(--paper-item-icon-color);
+        color: var(--state-icon-color);
         color: grey;
         border: 0;
         border-radius: 5px;
