@@ -234,6 +234,7 @@ export class MeteofranceWeatherCardEditor extends LitElement {
           <!-- Section prévisions par heure -->
           ${this.renderSectionHeader("Prévisions par heure", this._hourly_forecast, "hourly_forecast")}
           ${this._hourly_forecast ? html`
+            ${this.renderNumberField("Nombre d'heures", this._number_of_hourly_forecasts, "number_of_hourly_forecasts")}
             <ul class="switches">
               ${this.renderSwitchOption("Vent", this._hourly_wind, "hourly_wind")}
               ${this._hourly_wind ? html`
@@ -247,6 +248,7 @@ export class MeteofranceWeatherCardEditor extends LitElement {
           <!-- Section prévisions par jour -->
           ${this.renderSectionHeader("Prévisions par jour", this._daily_forecast, "daily_forecast")}
           ${this._daily_forecast ? html`
+            ${this.renderNumberField("Nombre de jours", this._number_of_daily_forecasts, "number_of_daily_forecasts")}
             <ul class="switches">
               ${this.renderSwitchOption("Vent", this._daily_wind, "daily_wind")}
               ${this._daily_wind ? html`
@@ -256,9 +258,6 @@ export class MeteofranceWeatherCardEditor extends LitElement {
               ${this.renderSwitchOption("Humidité", this._daily_humidity, "daily_humidity")}
             </ul>
           ` : ""}
-          <!-- -->
-          ${this.renderNumberField("Nombres d'heures", this._number_of_hourly_forecasts, "number_of_hourly_forecasts")}
-          ${this.renderNumberField("Nombres de jours", this._number_of_daily_forecasts, "number_of_daily_forecasts")}
           <!-- Meteo France weather entities -->
           ${this.renderSensorPicker(
             "Risque de pluie",
