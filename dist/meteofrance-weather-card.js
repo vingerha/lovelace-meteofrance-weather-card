@@ -453,7 +453,7 @@ class MeteofranceWeatherCard extends LitElement {
                   parseInt((stateObj.attributes.wind_bearing + 11.25) / 22.5)
                 ] + " ") + stateObj.attributes.wind_speed} ${this.getUnit("speed")}
             ${stateObj.attributes.wind_gust_speed != undefined
-              ? html`<div style="clear:both"><ha-icon icon="mdi:weather-windy-variant" title="Rafales"></ha-icon>${stateObj.attributes.wind_gust_speed} ${this.getUnit("speed")} Max.</div>`
+              ? html`<div style="clear:both"><ha-icon icon="mdi:weather-windy-variant" title="Rafales"></ha-icon>${stateObj.attributes.wind_gust_speed == 0 ? "-" : `${stateObj.attributes.wind_gust_speed} ${this.getUnit("speed")} Max.`}</div>`
               : ""}
           </li>
           <!-- Humidity -->
@@ -607,14 +607,22 @@ class MeteofranceWeatherCard extends LitElement {
   }
 
   renderDailyForecast(daily, lang, isDaily) {
+    const p = isDaily ? "daily_" : "hourly_";
+    const cfg = {
+      details:       this.isSelected(this._config[p + "details"]),
+      wind:          this.isSelected(this._config[p + "wind"]),
+      windGust:      this.isSelected(this._config[p + "wind_gust"]),
+      precipitation: this.isSelected(this._config[p + "precipitation"]),
+      humidity:      this.isSelected(this._config[p + "humidity"]),
+      windIcons:     this.isSelected(this._config[p + "wind_icons"]),
+    };
     return html` <li>
       <ul class="flow-column day">
-	<li>
+        <li>
           ${isDaily
             ? new Date(daily.datetime).toLocaleDateString(lang, {
                 weekday: "short",
-		day: "numeric",
-//                month: "short",
+                day: "numeric",
               })
             : new Date(daily.datetime).toLocaleTimeString(lang, {
                 hour: "2-digit",
@@ -638,10 +646,8 @@ class MeteofranceWeatherCard extends LitElement {
               </li>
             `
           : ""}
-        ${!this._config.hide_precipitation &&
-        daily.precipitation !== undefined &&
-        daily.precipitation !== null &&
-        this.isSelected(this._config.hourly_forecast_details)
+        ${cfg.precipitation && cfg.details &&
+        daily.precipitation !== undefined && daily.precipitation !== null
           ? html`
               <li class="precipitation">
                 ${Math.round(daily.precipitation * 10) / 10}
@@ -649,10 +655,8 @@ class MeteofranceWeatherCard extends LitElement {
               </li>
             `
           : ""}
-        ${this.isSelected(this._config.humidity_forecast) &&
-        daily.humidity !== undefined &&
-        daily.humidity !== null &&
-        this.isSelected(this._config.hourly_forecast_details)
+        ${cfg.humidity && cfg.details &&
+        daily.humidity !== undefined && daily.humidity !== null
           ? html`
               <li class="humidity">
                 ${Math.round(daily.humidity)}
@@ -660,44 +664,45 @@ class MeteofranceWeatherCard extends LitElement {
               </li>
             `
           : ""}
-        ${!this._config.hide_precipitation &&
-        daily.precipitation_probability !== undefined &&
-        daily.precipitation_probability !== null
+        ${cfg.precipitation &&
+        daily.precipitation_probability !== undefined && daily.precipitation_probability !== null
           ? html`
               <li class="precipitation_probability">
                 ${Math.round(daily.precipitation_probability)}
                 ${this.getUnit("precipitation_probability")}
               </li>
             `
-          : ""}		  
-        ${daily.wind_speed !== undefined && daily.wind_speed !== null && this.isSelected(this._config.hourly_forecast_details)
+          : ""}
+        ${cfg.wind && cfg.details &&
+        daily.wind_speed !== undefined && daily.wind_speed !== null
           ? html`
               <li class="wind_speed">
                 ${Math.round(daily.wind_speed)} ${this.getUnit("speed")}
               </li>
             `
           : ""}
-        ${daily.wind_gust_speed !== undefined && daily.wind_gust_speed !== null && this.isSelected(this._config.hourly_forecast_details)
+        ${cfg.wind && cfg.windGust && cfg.details
           ? html`
-              <li class="wind_gust_speed">
-                ${Math.round(daily.wind_gust_speed)} ${this.getUnit("speed")} Max.
+              ${(() => { const g = daily.wind_gust_speed !== undefined && daily.wind_gust_speed !== null ? Math.round(daily.wind_gust_speed) : 42 /* DEBUG */; return html`
+              <li class="wind_gust_speed" style="${g > 0 ? "background: red;" : ""}">
+                ${g > 0 ? `${g} ${this.getUnit("speed")}` : "-"}
+              </li>`; })()}
+            `
+          : ""}
+        ${cfg.windIcons && daily.wind_bearing !== undefined && daily.wind_bearing !== null
+          ? html`
+              <li class="icon"
+                style="background: none, url('/local/community/lovelace-meteofrance-weather-card/icons/arrow-north-static.svg'); background-size: contain; transform: rotate(${daily.wind_bearing + 180}deg) scale(0.5)">
               </li>
             `
           : ""}
-        ${this.isSelected(this._config.wind_forecast_icons) && daily.wind_bearing !== undefined && daily.wind_bearing !== null
-          ? html`			
-			<li class="icon"
-				style="background: none, url('/local/community/lovelace-meteofrance-weather-card/icons/arrow-north-static.svg'); background-size: contain; transform: rotate(${daily.wind_bearing + 180}deg) scale(0.5)">
-			  </li>
-			  `
-           : ""}
-	 ${this.isSelected(this._config.wind_forecast_icons) && daily.wind_bearing !== undefined && daily.wind_bearing == null
-          ? html`			
-			<li class="icon"
-				style="background: none, url('/local/community/lovelace-meteofrance-weather-card/icons/no-wind-bearing-static.svg'); background-size: contain; transform:  scale(0.5)">
-			  </li>
-			  `
-           : ""}
+        ${cfg.windIcons && daily.wind_bearing !== undefined && daily.wind_bearing == null
+          ? html`
+              <li class="icon"
+                style="background: none, url('/local/community/lovelace-meteofrance-weather-card/icons/no-wind-bearing-static.svg'); background-size: contain; transform: scale(0.5)">
+              </li>
+            `
+          : ""}
       </ul>
     </li>`;
   }

@@ -91,10 +91,54 @@ export class MeteofranceWeatherCardEditor extends LitElement {
     return this._config.number_of_hourly_forecasts || 5;
   }
 
-  get _hourly_forecast_details() {
-    return this._config.hourly_forecast_details !== false;
+  get _hourly_details() {
+      return this._config.hourly_details !== false;
   }
 
+  get _hourly_wind() {
+      return this._config.hourly_wind !== false;
+  
+  }
+
+  get _hourly_wind_gust() {
+      return this._config.hourly_wind_gust !== false;
+  }
+
+  get _hourly_precipitation() {
+      return this._config.hourly_precipitation !== false;
+  }
+
+  get _hourly_humidity() {
+      return this._config.hourly_humidity !== false;
+  }
+
+  get _hourly_wind_icons() {
+      return this._config.hourly_wind_icons !== false;
+  }
+
+  get _daily_details() {
+      return this._config.daily_details !== false;
+  }
+
+  get _daily_wind() {
+      return this._config.daily_wind !== false;
+  }
+
+  get _daily_wind_gust() {
+      return this._config.daily_wind_gust !== false;
+  }
+
+  get _daily_precipitation() {
+      return this._config.daily_precipitation !== false;
+  }
+
+  get _daily_humidity() {
+      return this._config.daily_humidity !== false;
+  }
+
+  get _daily_wind_icons() {
+      return this._config.daily_wind_icons !== false;
+  }
 
   // Météo France
   // Switches state
@@ -178,51 +222,40 @@ export class MeteofranceWeatherCardEditor extends LitElement {
             this._detailEntity,
             "detailEntity"
           )}
-          <!-- Switches -->
+          <!-- Switches généraux -->
+          <div class="section-header" style="border-top: none; margin-top: 0;">Général</div>
           <ul class="switches">
             ${this.renderSwitchOption("Météo actuelle", this._current, "current")}
             ${this.renderSwitchOption("Détails", this._details, "details")}
-            ${this.renderSwitchOption(
-              "Alertes",
-              this._alert_forecast,
-              "alert_forecast"
-            )}
-            ${this.renderSwitchOption(
-              "Pluie dans l'heure",
-              this._one_hour_forecast,
-              "one_hour_forecast"
-            )}
-            ${this.renderSwitchOption(
-              "Prévisions par heure - Détails",
-              this._hourly_forecast_details,
-              "hourly_forecast_details"
-            )}
-            ${this.renderSwitchOption(
-              "Prévisions par heure",
-              this._hourly_forecast,
-              "hourly_forecast"
-            )}
-            ${this.renderSwitchOption(
-              "Prévisions par jour",
-              this._daily_forecast,
-              "daily_forecast"
-            )}
-            ${this.renderSwitchOption(
-              "Humidité",
-              this._humidity_forecast,
-              "humidity_forecast"
-            )}
-            ${this.renderSwitchOption(
-              "Girouette",
-              this._wind_forecast_icons,
-              "wind_forecast_icons"
-            )}
-            ${this.renderSwitchOption(
-              "Icones animées",
-              this._animated_icons,
-              "animated_icons"
-            )}				
+            ${this.renderSwitchOption("Alertes", this._alert_forecast, "alert_forecast")}
+            ${this.renderSwitchOption("Pluie dans l'heure", this._one_hour_forecast, "one_hour_forecast")}
+            ${this.renderSwitchOption("Icônes animées", this._animated_icons, "animated_icons")}
           </ul>
+          <!-- Section prévisions par heure -->
+          ${this.renderSectionHeader("Prévisions par heure", this._hourly_forecast, "hourly_forecast")}
+          ${this._hourly_forecast ? html`
+            <ul class="switches">
+              ${this.renderSwitchOption("Vent", this._hourly_wind, "hourly_wind")}
+              ${this._hourly_wind ? html`
+                ${this.renderSwitchOption("Rafales", this._hourly_wind_gust, "hourly_wind_gust")}
+              ` : ""}
+              ${this.renderSwitchOption("Précipitations", this._hourly_precipitation, "hourly_precipitation")}
+              ${this.renderSwitchOption("Humidité", this._hourly_humidity, "hourly_humidity")}
+              ${this.renderSwitchOption("Girouette", this._hourly_wind_icons, "hourly_wind_icons")}
+            </ul>
+          ` : ""}
+          <!-- Section prévisions par jour -->
+          ${this.renderSectionHeader("Prévisions par jour", this._daily_forecast, "daily_forecast")}
+          ${this._daily_forecast ? html`
+            <ul class="switches">
+              ${this.renderSwitchOption("Vent", this._daily_wind, "daily_wind")}
+              ${this._daily_wind ? html`
+                ${this.renderSwitchOption("Rafales", this._daily_wind_gust, "daily_wind_gust")}
+              ` : ""}
+              ${this.renderSwitchOption("Précipitations", this._daily_precipitation, "daily_precipitation")}
+              ${this.renderSwitchOption("Humidité", this._daily_humidity, "daily_humidity")}
+            </ul>
+          ` : ""}
           <!-- -->
           ${this.renderNumberField("Nombres d'heures", this._number_of_hourly_forecasts, "number_of_hourly_forecasts")}
           ${this.renderNumberField("Nombres de jours", this._number_of_daily_forecasts, "number_of_daily_forecasts")}
@@ -303,6 +336,19 @@ export class MeteofranceWeatherCardEditor extends LitElement {
         @change="${this._valueChanged}"
         allow-custom-entity
       ></ha-entity-picker>
+    `;
+  }
+
+  renderSectionHeader(label, state, configAttr) {
+    return html`
+      <div class="section-header">
+        <span>${label}</span>
+        <ha-switch
+          .checked=${state}
+          .configValue="${configAttr}"
+          @change="${this._valueChanged}"
+        ></ha-switch>
+      </div>
     `;
   }
 
@@ -400,6 +446,15 @@ export class MeteofranceWeatherCardEditor extends LitElement {
       }
       .switches span {
         padding: 0 16px;
+      }
+      .section-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-weight: bold;
+        padding: 8px 0 4px;
+        border-top: 1px solid var(--divider-color);
+        margin-top: 8px;
       }
     `;
   }
