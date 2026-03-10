@@ -424,51 +424,56 @@ class MeteofranceWeatherCard extends LitElement {
     this.numberElements++;
 
     return html`
-      <ul class="flow-row details ${this.numberElements > 1 ? " spacer" : ""}">
-        <!-- Cloudy -->
-        ${this.renderMeteoFranceDetail(
-          this.hass.states[this._config.cloudCoverEntity]
-        )}
-        <!-- Wind -->
-        ${this.renderDetail(
-          (stateObj.attributes.wind_bearing == undefined
-            ? " "
-            : windDirections[
-                parseInt((stateObj.attributes.wind_bearing + 11.25) / 22.5)
-              ] + " ") + stateObj.attributes.wind_speed,
-          "Vent",
-          "mdi:weather-windy",
-          this.getUnit("speed")
-        )}
-        <!-- Rain -->
-        ${this.renderMeteoFranceDetail(
-          this.hass.states[this._config.rainChanceEntity]
-        )}
-        <!-- Humidity -->
-        ${this.renderDetail(
-          stateObj.attributes.humidity,
-          "Humidité",
-          "mdi:water-percent",
-          "%"
-        )}
-        <!-- Freeze -->
-        ${this.renderMeteoFranceDetail(
-          this.hass.states[this._config.freezeChanceEntity]
-        )}
-        <!-- Pressure -->
-        ${this.renderDetail(
-          stateObj.attributes.pressure,
-          "Pression atmosphérique",
-          "mdi:gauge",
-          this.getUnit("air_pressure")
-        )}
-        <!-- Snow -->
-        ${this.renderMeteoFranceDetail(
-          this.hass.states[this._config.snowChanceEntity]
-        )}
-        <!-- UV -->
-        ${this.renderMeteoFranceDetail(this.hass.states[this._config.uvEntity])}
-      </ul>
+      <div class="flow-row details-wrapper${this.numberElements > 1 ? " spacer" : ""}">
+        <ul class="details-col">
+          <!-- Cloudy -->
+          ${this.renderMeteoFranceDetail(
+            this.hass.states[this._config.cloudCoverEntity]
+          )}
+          <!-- Rain -->
+          ${this.renderMeteoFranceDetail(
+            this.hass.states[this._config.rainChanceEntity]
+          )}
+          <!-- Freeze -->
+          ${this.renderMeteoFranceDetail(
+            this.hass.states[this._config.freezeChanceEntity]
+          )}
+          <!-- Snow -->
+          ${this.renderMeteoFranceDetail(
+            this.hass.states[this._config.snowChanceEntity]
+          )}
+        </ul>
+        <ul class="details-col details-col-right">
+          <!-- Wind + Wind Gust -->
+          <li>
+            <ha-icon icon="mdi:weather-windy" title="Vent"></ha-icon>
+            ${(stateObj.attributes.wind_bearing == undefined
+              ? " "
+              : windDirections[
+                  parseInt((stateObj.attributes.wind_bearing + 11.25) / 22.5)
+                ] + " ") + stateObj.attributes.wind_speed} ${this.getUnit("speed")}
+            ${stateObj.attributes.wind_gust_speed != undefined
+              ? html`<div style="clear:both"><ha-icon icon="mdi:weather-windy-variant" title="Rafales"></ha-icon>${stateObj.attributes.wind_gust_speed} ${this.getUnit("speed")} Max.</div>`
+              : ""}
+          </li>
+          <!-- Humidity -->
+          ${this.renderDetail(
+            stateObj.attributes.humidity,
+            "Humidité",
+            "mdi:water-percent",
+            "%"
+          )}
+          <!-- Pressure -->
+          ${this.renderDetail(
+            stateObj.attributes.pressure,
+            "Pression atmosphérique",
+            "mdi:gauge",
+            this.getUnit("air_pressure")
+          )}
+          <!-- UV -->
+          ${this.renderMeteoFranceDetail(this.hass.states[this._config.uvEntity])}
+        </ul>
+      </div>
       <ul class="flow-row details">
         <!-- Sunset up -->
         ${next_rising
@@ -669,6 +674,13 @@ class MeteofranceWeatherCard extends LitElement {
           ? html`
               <li class="wind_speed">
                 ${Math.round(daily.wind_speed)} ${this.getUnit("speed")}
+              </li>
+            `
+          : ""}
+        ${daily.wind_gust_speed !== undefined && daily.wind_gust_speed !== null && this.isSelected(this._config.hourly_forecast_details)
+          ? html`
+              <li class="wind_gust_speed">
+                ${Math.round(daily.wind_gust_speed)} ${this.getUnit("speed")} Max.
               </li>
             `
           : ""}
@@ -985,12 +997,6 @@ class MeteofranceWeatherCard extends LitElement {
         font-weight: 300;
       }
 
-      .details ha-icon {
-        height: 22px;
-        margin-right: 5px;
-        color: var(--state-icon-color);
-      }
-
       .details > li {
         flex-basis: auto;
         width: 50%;
@@ -1001,6 +1007,39 @@ class MeteofranceWeatherCard extends LitElement {
       }
 
       .details > li:nth-child(2n) ha-icon {
+        margin-right: 0;
+        margin-left: 8px;
+        float: right;
+      }
+
+      .details-wrapper {
+        display: flex;
+        justify-content: space-between;
+        font-weight: 300;
+      }
+
+      .details-col {
+        width: 50%;
+        padding: 0;
+        margin: 0;
+        list-style: none;
+      }
+
+      .details-col ha-icon {
+        height: 22px;
+        margin-right: 5px;
+        color: var(--state-icon-color);
+      }
+
+      .details-col-right {
+        text-align: right;
+      }
+
+      .details-col-right li {
+        overflow: hidden;
+      }
+
+      .details-col-right ha-icon {
         margin-right: 0;
         margin-left: 8px;
         float: right;

@@ -113,10 +113,14 @@ export class MeteofranceWeatherCardEditor extends LitElement {
   get _wind_forecast_icons() {
     return this._config.wind_forecast_icons !== false;
   }
-  
+
+  get _wind_gust() {
+    return this._config.wind_gust !== false;
+  }
+
   get _humidity_forecast() {
     return this._config.humidity_forecast !== false;
-  }  
+  }
 
   get _alertEntity() {
     return this._config.alertEntity || "";
