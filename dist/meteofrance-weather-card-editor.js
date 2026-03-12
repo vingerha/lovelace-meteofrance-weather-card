@@ -195,7 +195,7 @@ export class MeteofranceWeatherCardEditor extends LitElement {
 
           ${this.renderSectionHeader(t.dailyForecast, this._daily_forecast, "daily_forecast")}
           ${this._daily_forecast ? html`
-            ${this.renderNumberField(t.numberOfDays, this._number_of_daily_forecasts, "number_of_daily_forecasts", 1, 14)}
+            ${this.renderNumberField(t.numberOfDays, this._number_of_daily_forecasts, "number_of_daily_forecasts", 1, 15)}
             <ul class="switches">
               ${this.renderSwitchOption(t.wind, this._daily_wind, "daily_wind")}
               ${this._daily_wind ? this.renderSwitchOption(t.windGusts, this._daily_wind_gust, "daily_wind_gust") : ""}
@@ -298,7 +298,7 @@ export class MeteofranceWeatherCardEditor extends LitElement {
            @iron-overlay-opened=${(ev) => ev.stopPropagation()}>
         <ha-selector
           .hass=${this.hass}
-          .selector=${{ "ui-action": {} }}
+          .selector=${{ "ui-action": { "actions": ["more-info", "navigate", "url", "call-service", "fire-dom-event", "none"] } }}
           .value=${value}
           @value-changed=${(ev) => { ev.stopPropagation(); this._actionChanged(ev, configKey); }}
         ></ha-selector>

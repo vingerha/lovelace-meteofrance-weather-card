@@ -406,14 +406,19 @@ class MeteofranceWeatherCard extends LitElement {
       `;
     }
 
-    const hasAction = this._config.tap_action || this._config.hold_action || this._config.double_tap_action;
+    const tapAction = this._config.tap_action || { action: "more-info" };
+    const hasAction =
+      tapAction.action !== "none" ||
+      (this._config.hold_action && this._config.hold_action.action !== "none") ||
+      (this._config.double_tap_action &&
+        this._config.double_tap_action.action !== "none");
+
     return html`
       <ha-card
-        ?interactive=${!!hasAction}
+        ?interactive=${hasAction}
         tabindex="${hasAction ? "0" : "-1"}"
         @click="${this._handleTap}"
         @keydown="${this._handleKeyDown}"
-        @dblclick="${this._handleDoubleTap}"
         @pointerdown="${this._handlePointerDown}"
         @pointerup="${this._cancelHold}"
         @pointercancel="${this._cancelHold}"
@@ -999,69 +1004,93 @@ class MeteofranceWeatherCard extends LitElement {
   _executeAction(action) {
     if (!action || action.action === "none") return;
     switch (action.action) {
+      
       case "more-info":
-        fireEvent(this, "hass-more-info", { entityId: action.entity || this._config.entity });
+        fireEvent(this, "hass-more-info", { 
+          entityId: action.entity || action.entity_id || this._config.entity 
+        });
         break;
+
       case "navigate":
-        window.history.pushState(null, "", action.navigation_path);
-        fireEvent(window, "location-changed");
+        if (action.navigation_path) {
+          window.history.pushState(null, "", action.navigation_path);
+          fireEvent(window, "location-changed");
+        }
         break;
+
       case "url":
-        window.open(action.url_path, "_blank");
+        if (action.url_path) {
+          window.open(action.url_path, "_blank");
+        }
         break;
+
       case "perform-action":
       case "call-service": {
-        const serviceStr = action.action_name || action.service || "";
+        const serviceStr = action.action_name || action.service || action.perform_action || "";
         const [domain, service] = serviceStr.split(".");
-        this.hass.callService(domain, service, action.service_data || action.data || {}, action.target);
+        if (domain && service) {
+          this.hass.callService(
+            domain, 
+            service, 
+            action.action_data || action.service_data || action.data || {}, 
+            action.target
+          );
+        }
         break;
       }
-      case "toggle":
-        this.hass.callService("homeassistant", "toggle", { entity_id: this._config.entity });
-        break;
+
       case "fire-dom-event":
-        fireEvent(this, action.event_type, action.event_data || {});
+        fireEvent(this, "ll-custom", action);
         break;
     }
   }
 
   _handleTap() {
-    if (this._holdFired) { this._holdFired = false; return; }
-    if (this._config.double_tap_action) {
-      this._tapTimer = window.setTimeout(() => {
-        this._tapTimer = null;
-        this._executeAction(this._config.tap_action || { action: "more-info" });
-      }, 250);
+    if (this._longPress) {
+      this._longPress = false;
+      return;
+    }
+    const tapAction = this._config.tap_action || { action: "more-info" };
+    const doubleTapAction = this._config.double_tap_action;
+
+    if (doubleTapAction && doubleTapAction.action !== "none") {
+      if (this._tapTimeout) {
+        clearTimeout(this._tapTimeout);
+        this._tapTimeout = undefined;
+        this._executeAction(doubleTapAction);
+      } else {
+        this._tapTimeout = setTimeout(() => {
+          this._tapTimeout = undefined;
+          this._executeAction(tapAction);
+        }, 400);
+      }
     } else {
-      this._executeAction(this._config.tap_action || { action: "more-info" });
+      this._executeAction(tapAction);
     }
   }
 
-  _handleDoubleTap(e) {
-    e.preventDefault();
-    if (this._tapTimer) { clearTimeout(this._tapTimer); this._tapTimer = null; }
-    this._executeAction(this._config.double_tap_action);
-  }
-
-  _handlePointerDown() {
-    if (!this._config.hold_action) return;
-    this._holdTimer = window.setTimeout(() => {
-      this._holdFired = true;
-      this._holdTimer = null;
+  _handlePointerDown(ev) {
+    if (ev.button !== 0) return;
+    this._longPress = false;
+    this._holdTimeout = setTimeout(() => {
+      this._longPress = true;
       this._executeAction(this._config.hold_action);
     }, 500);
   }
 
   _cancelHold() {
-    if (this._holdTimer) { clearTimeout(this._holdTimer); this._holdTimer = null; }
-  }
-
-  _handleKeyDown(ev) {
-    if (ev.key === "Enter" || ev.key === " ") {
-      ev.preventDefault();
-      this._handleTap();
+    if (this._holdTimeout) {
+      clearTimeout(this._holdTimeout);
+      this._holdTimeout = undefined;
     }
   }
+
+    _handleKeyDown(ev) {
+      if (ev.key === "Enter" || ev.key === " ") {
+        ev.preventDefault();
+        this._handleTap();
+      }
+    }
 
   getCardSize() {
     return 3;
