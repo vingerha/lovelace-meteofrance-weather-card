@@ -171,7 +171,7 @@ function hasConfigOrEntityChanged(element, changedProps) {
       oldHass.states["sun.sun"] !== element.hass.states["sun.sun"] ||
       !DefaultSensors.every((sensor) => {
         const sensorName = "sensor." + entityName + sensor[1];
-        oldHass.states[sensorName] == element.hass.states[sensorName];
+        return oldHass.states[sensorName] === element.hass.states[sensorName];
       })
     );
   }
@@ -223,13 +223,13 @@ class MeteofranceWeatherCard extends LitElement {
   static getWeatherEntitiesFromEntity(hass, entityName, allEntities) {
     let entities = {};
     DefaultSensors.forEach((sensor) => {
-      const sensorName = "sensor." + entityName + sensor[0];
+      const sensorName = "sensor." + entityName + sensor[1];
       if (hass.states[sensorName] !== undefined) {
-        let sensor = allEntities[sensorName];
-        if (!sensor) {
+        const entry = allEntities[sensorName];
+        if (entry) {
           entities = {
             ...entities,
-            [sensor[1]]: sensorName,
+            [sensor[0]]: sensorName,
           };
         }
       }
@@ -247,13 +247,13 @@ class MeteofranceWeatherCard extends LitElement {
   upgradeConfig(config) {
     const upgradedConfig = { ...config };
     if (this.hass !== undefined) {
-      const stateObj = this.hass.states[this._config.entity];
+      const stateObj = this.hass.states[config.entity];
       if (stateObj !== undefined && stateObj.attributes.forecast !== undefined) {
         // Deduce "daily_forecast" & "hourly_forecast" from deprecated "forecast"
         if (this.isDailyForecast(stateObj.attributes.forecast)) {
           if (config["forecast"] !== undefined && config["daily_forecast"] === undefined) {
             upgradedConfig["daily_forecast"] = config["forecast"];
-            upgradedConfig["hourly_forecast"] = "false";
+            upgradedConfig["hourly_forecast"] = false;
           }
           if (config["number_of_forecasts"] !== undefined && config["number_of_daily_forecasts"] === undefined) {
             upgradedConfig["number_of_daily_forecasts"] = config["number_of_forecasts"];
@@ -261,7 +261,7 @@ class MeteofranceWeatherCard extends LitElement {
         }
         else {
           if (config["forecast"] !== undefined && config["hourly_forecast"] === undefined) {
-            upgradedConfig["daily_forecast"] = "false";
+            upgradedConfig["daily_forecast"] = false;
             upgradedConfig["hourly_forecast"] = config["forecast"];
           }
           if (config["number_of_forecasts"] !== undefined && config["number_of_hourly_forecasts"] === undefined) {
@@ -406,8 +406,18 @@ class MeteofranceWeatherCard extends LitElement {
       `;
     }
 
+    const hasAction = this._config.tap_action || this._config.hold_action || this._config.double_tap_action;
     return html`
-      <ha-card @click="${this._handleTap}" @dblclick="${this._handleDoubleTap}" @pointerdown="${this._handlePointerDown}" @pointerup="${this._cancelHold}" @pointercancel="${this._cancelHold}">
+      <ha-card
+        ?interactive=${!!hasAction}
+        tabindex="${hasAction ? "0" : "-1"}"
+        @click="${this._handleTap}"
+        @keydown="${this._handleKeyDown}"
+        @dblclick="${this._handleDoubleTap}"
+        @pointerdown="${this._handlePointerDown}"
+        @pointerup="${this._cancelHold}"
+        @pointercancel="${this._cancelHold}"
+      >
         ${this.isSelected(this._config.current)
           ? this.renderCurrent(stateObj)
           : ""}
@@ -511,7 +521,7 @@ class MeteofranceWeatherCard extends LitElement {
                   parseInt((stateObj.attributes.wind_bearing + 11.25) / 22.5)
                 ] + " ") + stateObj.attributes.wind_speed} ${this.getUnit("speed")}
             ${stateObj.attributes.wind_gust_speed != undefined
-              ? html`<div style="clear:both"><ha-icon icon="mdi:weather-windy-variant" title="${t.windGust}"></ha-icon>${stateObj.attributes.wind_gust_speed == 0 ? "-" : `${stateObj.attributes.wind_gust_speed} ${this.getUnit("speed")} ${t.windGustMax}`}</div>`
+              ? html`<div style="clear:both"><ha-icon icon="mdi:weather-windy-variant" title="${t.windGust}"></ha-icon>${this._config.wind_gust_zero_dash !== false && stateObj.attributes.wind_gust_speed == 0 ? "-" : `${stateObj.attributes.wind_gust_speed} ${this.getUnit("speed")} ${t.windGustMax}`}</div>`
               : ""}
           </li>
           <!-- Humidity -->
@@ -743,12 +753,13 @@ class MeteofranceWeatherCard extends LitElement {
               </li>
             `
           : ""}
-        ${cfg.wind && cfg.windGust && cfg.details
+        ${cfg.wind && cfg.windGust && cfg.details && daily.wind_gust_speed !== undefined && daily.wind_gust_speed !== null
           ? html`
-              ${(() => { const g = daily.wind_gust_speed !== undefined && daily.wind_gust_speed !== null ? Math.round(daily.wind_gust_speed) : 42 /* DEBUG */; return html`
-              <li class="wind_gust_speed" style="${g > 0 ? "background: red;" : ""}">
-                ${g > 0 ? `${g} ${this.getUnit("speed")}` : "-"}
-              </li>`; })()}
+              <li class="wind_gust_speed">
+                ${this._config.wind_gust_zero_dash !== false && Math.round(daily.wind_gust_speed) === 0
+                  ? "-"
+                  : `${Math.round(daily.wind_gust_speed)} ${this.getUnit("speed")}`}
+              </li>
             `
           : ""}
         ${cfg.windIcons && daily.wind_bearing !== undefined && daily.wind_bearing !== null
@@ -988,6 +999,9 @@ class MeteofranceWeatherCard extends LitElement {
   _executeAction(action) {
     if (!action || action.action === "none") return;
     switch (action.action) {
+      case "more-info":
+        fireEvent(this, "hass-more-info", { entityId: action.entity || this._config.entity });
+        break;
       case "navigate":
         window.history.pushState(null, "", action.navigation_path);
         fireEvent(window, "location-changed");
@@ -995,8 +1009,19 @@ class MeteofranceWeatherCard extends LitElement {
       case "url":
         window.open(action.url_path, "_blank");
         break;
-      default:
-        fireEvent(this, "hass-more-info", { entityId: this._config.entity });
+      case "perform-action":
+      case "call-service": {
+        const serviceStr = action.action_name || action.service || "";
+        const [domain, service] = serviceStr.split(".");
+        this.hass.callService(domain, service, action.service_data || action.data || {}, action.target);
+        break;
+      }
+      case "toggle":
+        this.hass.callService("homeassistant", "toggle", { entity_id: this._config.entity });
+        break;
+      case "fire-dom-event":
+        fireEvent(this, action.event_type, action.event_data || {});
+        break;
     }
   }
 
@@ -1019,6 +1044,7 @@ class MeteofranceWeatherCard extends LitElement {
   }
 
   _handlePointerDown() {
+    if (!this._config.hold_action) return;
     this._holdTimer = window.setTimeout(() => {
       this._holdFired = true;
       this._holdTimer = null;
@@ -1030,6 +1056,13 @@ class MeteofranceWeatherCard extends LitElement {
     if (this._holdTimer) { clearTimeout(this._holdTimer); this._holdTimer = null; }
   }
 
+  _handleKeyDown(ev) {
+    if (ev.key === "Enter" || ev.key === " ") {
+      ev.preventDefault();
+      this._handleTap();
+    }
+  }
+
   getCardSize() {
     return 3;
   }
@@ -1037,11 +1070,14 @@ class MeteofranceWeatherCard extends LitElement {
   static get styles() {
     return css`
       ha-card {
-        cursor: pointer;
         margin: auto;
         overflow: hidden;
         padding: 0.5em 1em;
         position: relative;
+      }
+
+      ha-card[interactive] {
+        cursor: pointer;
       }
 
       .not-found {

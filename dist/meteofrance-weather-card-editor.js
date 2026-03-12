@@ -11,24 +11,11 @@ const fireEvent = (node, type, detail, options) => {
   return event;
 };
 
-if (
-  !customElements.get("ha-switch") &&
-  customElements.get("paper-toggle-button")
-) {
-  customElements.define("ha-switch", customElements.get("paper-toggle-button"));
-}
-
-if (!customElements.get("ha-entity-picker")) {
-  (customElements.get("hui-entities-card")).getConfigElement();
-}
-
 const LitElement = customElements.get("hui-masonry-view")
   ? Object.getPrototypeOf(customElements.get("hui-masonry-view"))
   : Object.getPrototypeOf(customElements.get("hui-view"));
 const html = LitElement.prototype.html;
 const css = LitElement.prototype.css;
-
-const HELPERS = window.loadCardHelpers();
 
 const editorTranslations = {
   "fr": {
@@ -44,15 +31,10 @@ const editorTranslations = {
     "oneHourRain": "Pluie dans l'heure",
     "animatedIcons": "Icônes animées",
     "showSun": "Lever/Coucher du soleil",
+    "windGustZeroDash": "Rafales : - si 0 km/h",
     "tapAction": "Action au clic",
     "holdAction": "Action au clic long",
     "doubleTapAction": "Action au double clic",
-    "tapActionMoreInfo": "Plus d'infos",
-    "tapActionNavigate": "Naviguer",
-    "tapActionUrl": "Ouvrir une URL",
-    "tapActionNone": "Aucune",
-    "tapActionNavigationPath": "Chemin de navigation",
-    "tapActionUrlPath": "URL",
     "hourlyForecast": "Prévisions par heure",
     "numberOfHours": "Nombre d'heures",
     "wind": "Vent",
@@ -84,15 +66,10 @@ const editorTranslations = {
     "oneHourRain": "Rain in the hour",
     "animatedIcons": "Animated icons",
     "showSun": "Sunrise/Sunset",
+    "windGustZeroDash": "Gusts: show - if 0",
     "tapAction": "Tap action",
     "holdAction": "Hold action",
     "doubleTapAction": "Double tap action",
-    "tapActionMoreInfo": "More info",
-    "tapActionNavigate": "Navigate",
-    "tapActionUrl": "Open URL",
-    "tapActionNone": "None",
-    "tapActionNavigationPath": "Navigation path",
-    "tapActionUrlPath": "URL",
     "hourlyForecast": "Hourly forecast",
     "numberOfHours": "Number of hours",
     "wind": "Wind",
@@ -161,9 +138,10 @@ export class MeteofranceWeatherCardEditor extends LitElement {
   get _show_sun() { return this._config.show_sun !== false; }
   get _show_name() { return this._config.show_name !== false; }
   get _show_temperature() { return this._config.show_temperature !== false; }
-  get _tap_action() { return this._config.tap_action || { action: "none" }; }
-  get _hold_action() { return this._config.hold_action || { action: "none" }; }
-  get _double_tap_action() { return this._config.double_tap_action || { action: "none" }; }
+  get _wind_gust_zero_dash() { return this._config.wind_gust_zero_dash !== false; }
+  get _tap_action() { return this._config.tap_action || {}; }
+  get _hold_action() { return this._config.hold_action || {}; }
+  get _double_tap_action() { return this._config.double_tap_action || {}; }
   get _alertEntity() { return this._config.alertEntity || ""; }
   get _cloudCoverEntity() { return this._config.cloudCoverEntity || ""; }
   get _freezeChanceEntity() { return this._config.freezeChanceEntity || ""; }
@@ -176,14 +154,6 @@ export class MeteofranceWeatherCardEditor extends LitElement {
   getTranslations() {
     const lang = (this.hass.selectedLanguage || this.hass.language || "fr").split("-")[0];
     return editorTranslations[lang] || editorTranslations["fr"];
-  }
-
-  firstUpdated() {
-    HELPERS.then((help) => {
-      if (help.importMoreInfoControl) {
-        help.importMoreInfoControl("fan");
-      }
-    });
   }
 
   render() {
@@ -207,12 +177,13 @@ export class MeteofranceWeatherCardEditor extends LitElement {
               ${this.renderSwitchOption(t.oneHourRain, this._one_hour_forecast, "one_hour_forecast")}
               ${this.renderSwitchOption(t.animatedIcons, this._animated_icons, "animated_icons")}
               ${this.renderSwitchOption(t.showSun, this._show_sun, "show_sun")}
+              ${this.renderSwitchOption(t.windGustZeroDash, this._wind_gust_zero_dash, "wind_gust_zero_dash")}
             </ul>
           ` : ""}
 
           ${this.renderSectionHeader(t.hourlyForecast, this._hourly_forecast, "hourly_forecast")}
           ${this._hourly_forecast ? html`
-            ${this.renderNumberField(t.numberOfHours, this._number_of_hourly_forecasts, "number_of_hourly_forecasts")}
+            ${this.renderNumberField(t.numberOfHours, this._number_of_hourly_forecasts, "number_of_hourly_forecasts", 1, 24)}
             <ul class="switches">
               ${this.renderSwitchOption(t.wind, this._hourly_wind, "hourly_wind")}
               ${this._hourly_wind ? this.renderSwitchOption(t.windGusts, this._hourly_wind_gust, "hourly_wind_gust") : ""}
@@ -224,7 +195,7 @@ export class MeteofranceWeatherCardEditor extends LitElement {
 
           ${this.renderSectionHeader(t.dailyForecast, this._daily_forecast, "daily_forecast")}
           ${this._daily_forecast ? html`
-            ${this.renderNumberField(t.numberOfDays, this._number_of_daily_forecasts, "number_of_daily_forecasts")}
+            ${this.renderNumberField(t.numberOfDays, this._number_of_daily_forecasts, "number_of_daily_forecasts", 1, 14)}
             <ul class="switches">
               ${this.renderSwitchOption(t.wind, this._daily_wind, "daily_wind")}
               ${this._daily_wind ? this.renderSwitchOption(t.windGusts, this._daily_wind_gust, "daily_wind_gust") : ""}
@@ -243,25 +214,34 @@ export class MeteofranceWeatherCardEditor extends LitElement {
           <div class="section-header"><span>${t.iconsDir}</span></div>
           ${this.renderTextField(t.iconsDirPath, this._icons, "icons")}
 
-          ${this.renderActionSection(t.tapAction, this._tap_action, "tap_action", t)}
-          ${this.renderActionSection(t.holdAction, this._hold_action, "hold_action", t)}
-          ${this.renderActionSection(t.doubleTapAction, this._double_tap_action, "double_tap_action", t)}
+          ${this.renderActionSection(t.tapAction, this._tap_action, "tap_action")}
+          ${this.renderActionSection(t.holdAction, this._hold_action, "hold_action")}
+          ${this.renderActionSection(t.doubleTapAction, this._double_tap_action, "double_tap_action")}
         </div>
       </div>
     `;
   }
 
-  renderTextField(label, state, configAttr) { return this.renderField(label, state, configAttr, "text"); }
-  renderNumberField(label, state, configAttr) { return this.renderField(label, state, configAttr, "number"); }
-  renderField(label, state, configAttr, type) {
+  renderTextField(label, state, configAttr) {
     return html`
       <ha-textfield
         label="${label}"
         .value="${state}"
-        type="${type}"
         .configValue=${configAttr}
         @input=${this._valueChanged}
       ></ha-textfield>
+    `;
+  }
+
+  renderNumberField(label, value, configAttr, min, max) {
+    return html`
+      <ha-selector
+        .hass=${this.hass}
+        .selector=${{ number: { min, max, step: 1, mode: "box" } }}
+        .value=${value}
+        .label=${label}
+        @value-changed=${(ev) => this._numberChanged(ev, configAttr)}
+      ></ha-selector>
     `;
   }
 
@@ -274,7 +254,7 @@ export class MeteofranceWeatherCardEditor extends LitElement {
         .hass="${this.hass}"
         .value="${entity}"
         .configValue="${configAttr}"
-        .includeDomains="${domain}"
+        .includeDomains=${[domain]}
         @change="${this._valueChanged}"
         allow-custom-entity
       ></ha-entity-picker>
@@ -307,52 +287,41 @@ export class MeteofranceWeatherCardEditor extends LitElement {
     `;
   }
 
-  renderActionSection(label, action, configKey, t) {
+  renderActionSection(label, action, configKey) {
+    const value = (action && action.action && action.action !== "none") ? action : undefined;
     return html`
       <div class="section-header"><span>${label}</span></div>
-      <select class="tap-action-select" data-action-key="${configKey}" @change="${this._actionTypeChanged}">
-        <option value="more-info" ?selected="${action.action === 'more-info'}">${t.tapActionMoreInfo}</option>
-        <option value="navigate" ?selected="${action.action === 'navigate'}">${t.tapActionNavigate}</option>
-        <option value="url" ?selected="${action.action === 'url'}">${t.tapActionUrl}</option>
-        <option value="none" ?selected="${action.action === 'none'}">${t.tapActionNone}</option>
-      </select>
-      ${action.action === "navigate" ? html`
-        <ha-textfield
-          label="${t.tapActionNavigationPath}"
-          .value="${action.navigation_path || ''}"
-          @input="${this._actionPathChanged}"
-          data-action-key="${configKey}"
-          data-path-key="navigation_path"
-        ></ha-textfield>
-      ` : ""}
-      ${action.action === "url" ? html`
-        <ha-textfield
-          label="${t.tapActionUrlPath}"
-          .value="${action.url_path || ''}"
-          @input="${this._actionPathChanged}"
-          data-action-key="${configKey}"
-          data-path-key="url_path"
-        ></ha-textfield>
-      ` : ""}
+      <div @closed=${(ev) => ev.stopPropagation()}
+           @dialog-closed=${(ev) => ev.stopPropagation()}
+           @opened=${(ev) => ev.stopPropagation()}
+           @iron-overlay-closed=${(ev) => ev.stopPropagation()}
+           @iron-overlay-opened=${(ev) => ev.stopPropagation()}>
+        <ha-selector
+          .hass=${this.hass}
+          .selector=${{ "ui-action": {} }}
+          .value=${value}
+          @value-changed=${(ev) => { ev.stopPropagation(); this._actionChanged(ev, configKey); }}
+        ></ha-selector>
+      </div>
     `;
   }
 
-  _actionTypeChanged(ev) {
+  _actionChanged(ev, configKey) {
     if (!this._config || !this.hass) return;
-    const actionKey = ev.target.dataset.actionKey;
-    const action = ev.target.value;
-    if (!action || !actionKey) return;
-    this._config = { ...this._config, [actionKey]: { action } };
+    const newAction = ev.detail.value;
+    if (!newAction || newAction.action === "none") {
+      const newConfig = { ...this._config };
+      delete newConfig[configKey];
+      this._config = newConfig;
+    } else {
+      this._config = { ...this._config, [configKey]: newAction };
+    }
     fireEvent(this, "config-changed", { config: this._config });
-    this.requestUpdate();
   }
 
-  _actionPathChanged(ev) {
+  _numberChanged(ev, configAttr) {
     if (!this._config || !this.hass) return;
-    const actionKey = ev.target.dataset.actionKey;
-    const pathKey = ev.target.dataset.pathKey;
-    const current = this._config[actionKey] || { action: "none" };
-    this._config = { ...this._config, [actionKey]: { ...current, [pathKey]: ev.target.value } };
+    this._config = { ...this._config, [configAttr]: ev.detail.value };
     fireEvent(this, "config-changed", { config: this._config });
   }
 
@@ -408,7 +377,7 @@ export class MeteofranceWeatherCardEditor extends LitElement {
       .switches span { padding: 0 16px; }
       .section-header { display: flex; align-items: center; justify-content: space-between; font-weight: bold; padding: 8px 0 4px; border-top: 1px solid var(--divider-color); margin-top: 8px; }
       ha-textfield { display: block; width: 100%; margin-bottom: 8px; }
-      select.tap-action-select { display: block; width: 100%; height: 56px; padding: 0 12px; font-size: 1rem; font-family: inherit; border: 1px solid var(--divider-color); border-radius: 4px; background-color: var(--card-background-color, #fff); color: var(--primary-text-color); margin-bottom: 8px; cursor: pointer; }
+      ha-selector { display: block; margin-bottom: 8px; }
     `;
   }
 }
