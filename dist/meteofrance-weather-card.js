@@ -807,12 +807,10 @@ class MeteofranceWeatherCard extends LitElement {
               </li>
             `
           : ""}
-        ${cfg.wind && cfg.windGust && cfg.details && daily.wind_gust_speed !== undefined && daily.wind_gust_speed !== null
+        ${cfg.wind && cfg.windGust && cfg.details && (daily.wind_gust_speed !== undefined && daily.wind_gust_speed !== null)
           ? html`
-              <li class="wind_gust_speed">
-                ${this._config.wind_gust_zero_dash !== false && Math.round(daily.wind_gust_speed) === 0
-                  ? "-"
-                  : `${Math.round(daily.wind_gust_speed)} ${this.getUnit("speed")}`}
+              <li class="wind_gust_speed" style="${daily.wind_gust_speed != null && Math.round(daily.wind_gust_speed) !== 0 ? "background: red; color: white;" : ""}">
+                ${(() => { const v = daily.wind_gust_speed; return (v == null || (this._config.wind_gust_zero_dash !== false && Math.round(v) === 0)) ? "-" : `${Math.round(v)} ${this.getUnit("speed")}`; })()}
               </li>
             `
           : ""}
