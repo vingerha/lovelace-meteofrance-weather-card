@@ -186,6 +186,9 @@ function hasConfigOrEntityChanged(element, changedProps) {
 
   const oldHass = changedProps.get("hass");
   if (oldHass) {
+    if (!element._config || !element._config.entity) {
+      return true;
+    }
     const entityName = element._config.entity.split(".")[1];
     return (
       oldHass.states[element._config.entity] !==
@@ -349,7 +352,7 @@ class MeteofranceWeatherCard extends LitElement {
     return {};
   }
 
-  _unsubscribeDailyForecastEvents() {
+_unsubscribeDailyForecastEvents() {
     if (this._daily_subscribed) {
       this._daily_subscribed.then((unsub) => unsub());
       this._daily_subscribed = undefined;
@@ -640,7 +643,7 @@ class MeteofranceWeatherCard extends LitElement {
   renderOneHourForecast() {
     const rainForecast = this.hass.states[this._config.rainForecastEntity];
 
-    if (!rainForecast || rainForecast.length === 0) {
+    if (!rainForecast || !rainForecast.attributes || !rainForecast.attributes["1_hour_forecast"]) {
       return html``;
     }
 
@@ -853,9 +856,9 @@ class MeteofranceWeatherCard extends LitElement {
 
   getOneHourForecast(rainForecastEntity) {
     let rainForecastList = [];
-    for (let [time, value] of Object.entries(
-      rainForecastEntity.attributes["1_hour_forecast"]
-    )) {
+    const forecastAttr = rainForecastEntity.attributes["1_hour_forecast"];
+    if (!forecastAttr) return rainForecastList;
+    for (let [time, value] of Object.entries(forecastAttr)) {
       if (time != undefined && time.match(/[0-9]*min/g)) {
         time = time.replace("min", "").trim();
         rainForecastList.push([time, rainForecastValues.get(value), value]);
@@ -868,9 +871,8 @@ class MeteofranceWeatherCard extends LitElement {
   getOneHourForecastTime(rainForecastEntity) {
     const lang = this.hass.language;
     const timeZone = this.hass.config.time_zone;
-    let rainForecastTimeRef = new Date(
-      rainForecastEntity.attributes["forecast_time_ref"]
-    );
+    const timeRefRaw = rainForecastEntity.attributes["forecast_time_ref"];
+    let rainForecastTimeRef = timeRefRaw ? new Date(timeRefRaw) : new Date();
     const timeFormatOptions = this.getTimeFormatOptions();
     let rainForecastStartTime = rainForecastTimeRef.toLocaleTimeString(lang, {
       "hour": "2-digit",

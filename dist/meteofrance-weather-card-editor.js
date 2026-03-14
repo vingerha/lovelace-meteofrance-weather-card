@@ -259,15 +259,13 @@ export class MeteofranceWeatherCardEditor extends LitElement {
   renderSensorPicker(label, entity, configAttr) { return this.renderPicker(label, entity, configAttr, "sensor"); }
   renderPicker(label, entity, configAttr, domain) {
     return html`
-      <ha-entity-picker
-        label="${label}"
-        .hass="${this.hass}"
-        .value="${entity}"
-        .configValue="${configAttr}"
-        .includeDomains=${[domain]}
-        @change="${this._valueChanged}"
-        allow-custom-entity
-      ></ha-entity-picker>
+      <ha-selector
+        .hass=${this.hass}
+        .selector=${{ entity: { domain: domain } }}
+        .value=${entity || null}
+        .label=${label}
+        @value-changed=${(ev) => this._pickerChanged(ev, configAttr)}
+      ></ha-selector>
     `;
   }
 
@@ -326,6 +324,20 @@ export class MeteofranceWeatherCardEditor extends LitElement {
     fireEvent(this, "config-changed", { config: this._config });
   }
 
+  _pickerChanged(ev, configAttr) {
+    if (!this._config || !this.hass) return;
+    const value = ev.detail.value;
+    if (!value) {
+      const newConfig = { ...this._config };
+      delete newConfig[configAttr];
+      this._config = newConfig;
+    } else {
+      if (configAttr === "entity") this._weatherEntityChanged(value.split(".")[1]);
+      this._config = { ...this._config, [configAttr]: value };
+    }
+    fireEvent(this, "config-changed", { config: this._config });
+  }
+
   _numberChanged(ev, configAttr) {
     if (!this._config || !this.hass) return;
     this._config = { ...this._config, [configAttr]: ev.detail.value };
@@ -367,6 +379,7 @@ export class MeteofranceWeatherCardEditor extends LitElement {
     if (target.configValue) {
       if (target.value === "") {
         delete this._config[target.configValue];
+        fireEvent(this, "config-changed", { config: this._config });
       } else {
         if (target.configValue === "entity")
           this._weatherEntityChanged(target.value.split(".")[1]);
@@ -374,8 +387,17 @@ export class MeteofranceWeatherCardEditor extends LitElement {
           ...this._config,
           [target.configValue]: target.checked !== undefined ? target.checked : target.value,
         };
+        // Debounce uniquement pour les champs texte (ha-textfield émet @input à chaque frappe)
+        if (target.tagName && target.tagName.toLowerCase() === "ha-textfield") {
+          if (!this._debounceTimers) this._debounceTimers = {};
+          clearTimeout(this._debounceTimers[target.configValue]);
+          this._debounceTimers[target.configValue] = setTimeout(() => {
+            fireEvent(this, "config-changed", { config: this._config });
+          }, 300);
+        } else {
+          fireEvent(this, "config-changed", { config: this._config });
+        }
       }
-      fireEvent(this, "config-changed", { config: this._config });
     }
   }
 
