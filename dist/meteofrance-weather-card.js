@@ -77,6 +77,17 @@ const translations = {
     "rainNow": " actuellement.",
     "rainIn": " dans ",
     "entityNotAvailable": "Entité non disponible : ",
+    "alerts": {
+      "Vent violent": "Vent violent",
+      "Pluie-inondation": "Pluie-inondation",
+      "Orages": "Orages",
+      "Inondation": "Inondation",
+      "Neige-verglas": "Neige-verglas",
+      "Canicule": "Canicule",
+      "Grand-froid": "Grand-froid",
+      "Avalanches": "Avalanches",
+      "Vagues-submersion": "Vagues-submersion",
+    },
     "rainIntensity": {
       "Pluie faible": "Pluie faible",
       "Pluie modérée": "Pluie modérée",
@@ -119,6 +130,17 @@ const translations = {
     "rainNow": " now.",
     "rainIn": " in ",
     "entityNotAvailable": "Entity not available: ",
+    "alerts": {
+      "Vent violent": "High winds",
+      "Pluie-inondation": "Rain/flood",
+      "Orages": "Thunderstorm",
+      "Inondation": "Flood",
+      "Neige-verglas": "Snow/ice",
+      "Canicule": "Heat wave",
+      "Grand-froid": "Extreme cold",
+      "Avalanches": "Avalanche",
+      "Vagues-submersion": "Waves/flooding",
+    },
     "rainIntensity": {
       "Pluie faible": "Light rain",
       "Pluie modérée": "Moderate rain",
@@ -224,50 +246,77 @@ class MeteofranceWeatherCard extends LitElement {
     let entities = {};
     DefaultSensors.forEach((sensor) => {
       const sensorName = "sensor." + entityName + sensor[1];
-      if (hass.states[sensorName] !== undefined) {
-        const entry = allEntities[sensorName];
-        if (entry) {
-          entities = {
-            ...entities,
-            [sensor[0]]: sensorName,
-          };
-        }
+      if (hass.states[sensorName] !== undefined && allEntities.includes(sensorName)) {
+        entities = {
+          ...entities,
+          [sensor[0]]: sensorName,
+        };
       }
     });
     return entities;
   }
 
-  isDailyForecast(forecast) {
-    const diff =
-      new Date(forecast[1].datetime) - new Date(forecast[0].datetime);
-    return diff > 3600000;
-  }
-
-  // Upgrade config fields if necessary
+  // Mise à jour des champs de configuration si nécessaire
   upgradeConfig(config) {
-    const upgradedConfig = { ...config };
-    if (this.hass !== undefined) {
-      const stateObj = this.hass.states[config.entity];
-      if (stateObj !== undefined && stateObj.attributes.forecast !== undefined) {
-        // Deduce "daily_forecast" & "hourly_forecast" from deprecated "forecast"
-        if (this.isDailyForecast(stateObj.attributes.forecast)) {
-          if (config["forecast"] !== undefined && config["daily_forecast"] === undefined) {
-            upgradedConfig["daily_forecast"] = config["forecast"];
-            upgradedConfig["hourly_forecast"] = false;
-          }
-          if (config["number_of_forecasts"] !== undefined && config["number_of_daily_forecasts"] === undefined) {
-            upgradedConfig["number_of_daily_forecasts"] = config["number_of_forecasts"];
-          }
-        }
-        else {
-          if (config["forecast"] !== undefined && config["hourly_forecast"] === undefined) {
-            upgradedConfig["daily_forecast"] = false;
-            upgradedConfig["hourly_forecast"] = config["forecast"];
-          }
-          if (config["number_of_forecasts"] !== undefined && config["number_of_hourly_forecasts"] === undefined) {
-            upgradedConfig["number_of_hourly_forecasts"] = config["number_of_forecasts"];
-          }
-        }
+    let upgradedConfig = { ...config };
+
+    // Conversion des chaînes booléennes ("true"/"false") en vrais booléens
+    const boolKeys = [
+      "current", "details", "daily_forecast", "hourly_forecast",
+      "alert_forecast", "one_hour_forecast", "animated_icons",
+      "show_sun", "show_name", "show_temperature", "wind_gust_zero_dash",
+      "hourly_wind", "hourly_wind_gust", "hourly_precipitation",
+      "hourly_humidity", "hourly_wind_icons",
+      "daily_wind", "daily_wind_gust", "daily_precipitation",
+      "daily_humidity", "daily_wind_icons",
+    ];
+    boolKeys.forEach((k) => {
+      if (k in upgradedConfig && typeof upgradedConfig[k] === "string") {
+        if (upgradedConfig[k].toLowerCase() === "false") upgradedConfig[k] = false;
+        else if (upgradedConfig[k].toLowerCase() === "true") upgradedConfig[k] = true;
+      }
+    });
+
+    // Conversion des chaînes numériques en nombres
+    const numKeys = ["number_of_daily_forecasts", "number_of_hourly_forecasts", "number_of_forecasts"];
+    numKeys.forEach((k) => {
+      if (k in upgradedConfig && typeof upgradedConfig[k] === "string") {
+        const n = Number(upgradedConfig[k]);
+        if (!Number.isNaN(n)) upgradedConfig[k] = n;
+      }
+    });
+
+    // Initialisation des sous-options horaires manquantes pour toute config activant les prévisions horaires
+    if (upgradedConfig["hourly_forecast"] !== false) {
+      if (upgradedConfig["hourly_wind"] === undefined) upgradedConfig["hourly_wind"] = true;
+      if (upgradedConfig["hourly_wind_gust"] === undefined) upgradedConfig["hourly_wind_gust"] = true;
+      if (upgradedConfig["hourly_precipitation"] === undefined) upgradedConfig["hourly_precipitation"] = true;
+      if (upgradedConfig["hourly_humidity"] === undefined) upgradedConfig["hourly_humidity"] = true;
+      if (upgradedConfig["hourly_wind_icons"] === undefined) upgradedConfig["hourly_wind_icons"] = true;
+    }
+
+    // Initialisation des sous-options journalières manquantes pour toute config activant les prévisions journalières
+    if (upgradedConfig["daily_forecast"] !== false) {
+      if (upgradedConfig["daily_wind"] === undefined) upgradedConfig["daily_wind"] = true;
+      if (upgradedConfig["daily_wind_gust"] === undefined) upgradedConfig["daily_wind_gust"] = true;
+      if (upgradedConfig["daily_precipitation"] === undefined) upgradedConfig["daily_precipitation"] = true;
+      if (upgradedConfig["daily_humidity"] === undefined) upgradedConfig["daily_humidity"] = true;
+      if (upgradedConfig["daily_wind_icons"] === undefined) upgradedConfig["daily_wind_icons"] = true;
+    }
+
+    // Migration de la clé "forecast" dépréciée (HA < 2023.1 stockait les prévisions dans les attributs ;
+    // depuis 2023.1 les prévisions passent par souscription, donc attributes.forecast est toujours undefined.
+    // Par défaut : daily_forecast, le mode le plus courant pour Météo France).
+    if (config["forecast"] !== undefined && config["daily_forecast"] === undefined && config["hourly_forecast"] === undefined) {
+      upgradedConfig["daily_forecast"] = config["forecast"];
+      upgradedConfig["hourly_forecast"] = false;
+    }
+    if (config["number_of_forecasts"] !== undefined) {
+      if (upgradedConfig["daily_forecast"] !== false && config["number_of_daily_forecasts"] === undefined) {
+        upgradedConfig["number_of_daily_forecasts"] = config["number_of_forecasts"];
+      }
+      if (upgradedConfig["hourly_forecast"] !== false && config["number_of_hourly_forecasts"] === undefined) {
+        upgradedConfig["number_of_hourly_forecasts"] = config["number_of_forecasts"];
       }
     }
     return upgradedConfig;
@@ -289,8 +338,8 @@ class MeteofranceWeatherCard extends LitElement {
   }
 
   getTranslations() {
-    const lang = (this.hass.selectedLanguage || this.hass.language || "fr").split("-")[0];
-    return translations[lang] || translations["fr"];
+    const lang = (this.hass.language || "en").split("-")[0];
+    return translations[lang] || translations["en"];
   }
 
   getTimeFormatOptions() {
@@ -399,7 +448,7 @@ class MeteofranceWeatherCard extends LitElement {
       const t = this.getTranslations();
       return html`
         <ha-card>
-          <div class="not-found">
+          <div class="not-found" role="alert">
             ${t.entityNotAvailable}${this._config.entity}
           </div>
         </ha-card>
@@ -483,7 +532,7 @@ class MeteofranceWeatherCard extends LitElement {
 
   renderDetails(stateObj) {
     const sun = this.hass.states["sun.sun"];
-    const lang = this.hass.selectedLanguage || this.hass.language;
+    const lang = this.hass.language;
     const timeZone = this.hass.config.time_zone;
     const t = this.getTranslations();
     let next_rising;
@@ -499,44 +548,44 @@ class MeteofranceWeatherCard extends LitElement {
     return html`
       <div class="flow-row details-wrapper${this.numberElements > 1 ? " spacer" : ""}">
         <ul class="details-col">
-          <!-- Cloudy -->
+          <!-- Nébulosité -->
           ${this.renderMeteoFranceDetail(
             this.hass.states[this._config.cloudCoverEntity]
           )}
-          <!-- Rain -->
+          <!-- Pluie -->
           ${this.renderMeteoFranceDetail(
             this.hass.states[this._config.rainChanceEntity]
           )}
-          <!-- Freeze -->
+          <!-- Gel -->
           ${this.renderMeteoFranceDetail(
             this.hass.states[this._config.freezeChanceEntity]
           )}
-          <!-- Snow -->
+          <!-- Neige -->
           ${this.renderMeteoFranceDetail(
             this.hass.states[this._config.snowChanceEntity]
           )}
         </ul>
         <ul class="details-col details-col-right">
-          <!-- Wind + Wind Gust -->
+          <!-- Vent + Rafales -->
           <li>
             <ha-icon icon="mdi:weather-windy" title="${t.wind}"></ha-icon>
-            ${(stateObj.attributes.wind_bearing == undefined
+            ${(stateObj.attributes.wind_bearing == null
               ? " "
               : t.windDirections[
                   parseInt((stateObj.attributes.wind_bearing + 11.25) / 22.5)
                 ] + " ") + stateObj.attributes.wind_speed} ${this.getUnit("speed")}
-            ${stateObj.attributes.wind_gust_speed != undefined
+            ${stateObj.attributes.wind_gust_speed != null
               ? html`<div style="clear:both"><ha-icon icon="mdi:weather-windy-variant" title="${t.windGust}"></ha-icon>${this._config.wind_gust_zero_dash !== false && stateObj.attributes.wind_gust_speed == 0 ? "-" : `${stateObj.attributes.wind_gust_speed} ${this.getUnit("speed")} ${t.windGustMax}`}</div>`
               : ""}
           </li>
-          <!-- Humidity -->
+          <!-- Humidité -->
           ${this.renderDetail(
             stateObj.attributes.humidity,
             t.humidity,
             "mdi:water-percent",
             "%"
           )}
-          <!-- Pressure -->
+          <!-- Pression -->
           ${this.renderDetail(
             stateObj.attributes.pressure,
             t.pressure,
@@ -548,7 +597,7 @@ class MeteofranceWeatherCard extends LitElement {
         </ul>
       </div>
       <ul class="flow-row details">
-        <!-- Sunset up -->
+        <!-- Lever du soleil -->
         ${this.isSelected(this._config.show_sun) && next_rising
           ? this.renderDetail(
               next_rising.toLocaleTimeString(lang, { "hour": "2-digit", "minute": "2-digit", "timeZone": timeZone, ...this.getTimeFormatOptions() }),
@@ -556,7 +605,7 @@ class MeteofranceWeatherCard extends LitElement {
               "mdi:weather-sunset-up"
             )
           : ""}
-        <!-- Sunset down -->
+        <!-- Coucher du soleil -->
         ${this.isSelected(this._config.show_sun) && next_setting
           ? this.renderDetail(
               next_setting.toLocaleTimeString(lang, { "hour": "2-digit", "minute": "2-digit", "timeZone": timeZone, ...this.getTimeFormatOptions() }),
@@ -661,8 +710,8 @@ class MeteofranceWeatherCard extends LitElement {
       return html``;
     }
 
-    const lang = this.hass.selectedLanguage || this.hass.language;
-    const isDaily = forecast.type === "daily" ;
+    const lang = this.hass.language;
+    const isDaily = forecast.type === "daily";
 
     this.numberElements++;
     return html`  <div style="overflow-x:auto;"> <ul
@@ -767,14 +816,14 @@ class MeteofranceWeatherCard extends LitElement {
               </li>
             `
           : ""}
-        ${cfg.windIcons && daily.wind_bearing !== undefined && daily.wind_bearing !== null
+        ${cfg.windIcons && daily.wind_bearing != null
           ? html`
               <li class="icon"
                 style="background: none, url('/local/community/lovelace-meteofrance-weather-card/icons/arrow-north-static.svg'); background-size: contain; transform: rotate(${daily.wind_bearing + 180}deg) scale(0.5)">
               </li>
             `
           : ""}
-        ${cfg.windIcons && daily.wind_bearing !== undefined && daily.wind_bearing == null
+        ${cfg.windIcons && daily.wind_bearing === null
           ? html`
               <li class="icon"
                 style="background: none, url('/local/community/lovelace-meteofrance-weather-card/icons/no-wind-bearing-static.svg'); background-size: contain; transform: scale(0.5)">
@@ -819,7 +868,7 @@ class MeteofranceWeatherCard extends LitElement {
   }
 
   getOneHourForecastTime(rainForecastEntity) {
-    const lang = this.hass.selectedLanguage || this.hass.language;
+    const lang = this.hass.language;
     const timeZone = this.hass.config.time_zone;
     let rainForecastTimeRef = new Date(
       rainForecastEntity.attributes["forecast_time_ref"]
@@ -858,109 +907,30 @@ class MeteofranceWeatherCard extends LitElement {
   }
 
   getAlertForecast(alertEntity) {
-    let phenomenaList = [];
-
     if (alertEntity == undefined) {
       return [];
     }
 
-    if (
-      !this._config.hide_alertVentViolent &&
-      alertEntity.attributes["Vent violent"]
-    ) {
-      phenomenaList.push({
-        "name": "Vent violent",
-        "icon": "mdi:weather-windy",
-        "color": alertEntity.attributes["Vent violent"],
-      });
-    }
+    const t = this.getTranslations();
+    const alertDefs = [
+      { key: "Vent violent",      hide: "hide_alertVentViolent",      icon: "mdi:weather-windy" },
+      { key: "Pluie-inondation",  hide: "hide_alertPluieInondation",  icon: "mdi:weather-pouring" },
+      { key: "Orages",            hide: "hide_alertOrages",           icon: "mdi:weather-lightning" },
+      { key: "Inondation",        hide: "hide_alertInondation",       icon: "mdi:home-flood" },
+      { key: "Neige-verglas",     hide: "hide_alertNeigeVerglas",     icon: "mdi:weather-snowy-heavy" },
+      { key: "Canicule",          hide: "hide_alertCanicule",         icon: "mdi:weather-sunny-alert" },
+      { key: "Grand-froid",       hide: "hide_alertGrandFroid",       icon: "mdi:snowflake" },
+      { key: "Avalanches",        hide: "hide_alertAvalanches",       icon: "mdi:image-filter-hdr" },
+      { key: "Vagues-submersion", hide: "hide_alertVaguesSubmersion", icon: "mdi:waves" },
+    ];
 
-    if (
-      !this._config.hide_alertPluieInondation &&
-      alertEntity.attributes["Pluie-inondation"]
-    ) {
-      phenomenaList.push({
-        "name": "Pluie-inondation",
-        "icon": "mdi:weather-pouring",
-        "color": alertEntity.attributes["Pluie-inondation"],
-      });
-    }
-
-    if (!this._config.hide_alertOrages && alertEntity.attributes["Orages"]) {
-      phenomenaList.push({
-        "name": "Orages",
-        "icon": "mdi:weather-lightning",
-        "color": alertEntity.attributes["Orages"],
-      });
-    }
-
-    if (
-      !this._config.hide_alertInondation &&
-      alertEntity.attributes["Inondation"]
-    ) {
-      phenomenaList.push({
-        "name": "Inondation",
-        "icon": "mdi:home-flood",
-        "color": alertEntity.attributes["Inondation"],
-      });
-    }
-
-    if (
-      !this._config.hide_alertNeigeVerglas &&
-      alertEntity.attributes["Neige-verglas"]
-    ) {
-      phenomenaList.push({
-        "name": "Neige-verglas",
-        "icon": "mdi:weather-snowy-heavy",
-        "color": alertEntity.attributes["Neige-verglas"],
-      });
-    }
-
-    if (
-      !this._config.hide_alertCanicule &&
-      alertEntity.attributes["Canicule"]
-    ) {
-      phenomenaList.push({
-        "name": "Canicule",
-        "icon": "mdi:weather-sunny-alert",
-        "color": alertEntity.attributes["Canicule"],
-      });
-    }
-
-    if (
-      !this._config.hide_alertGrandFroid &&
-      alertEntity.attributes["Grand-froid"]
-    ) {
-      phenomenaList.push({
-        "name": "Grand-froid",
-        "icon": "mdi:snowflake",
-        "color": alertEntity.attributes["Grand-froid"],
-      });
-    }
-
-    if (
-      !this._config.hide_alertAvalanches &&
-      alertEntity.attributes["Avalanches"]
-    ) {
-      phenomenaList.push({
-        "name": "Avalanches",
-        "icon": "mdi:image-filter-hdr",
-        "color": alertEntity.attributes["Avalanches"],
-      });
-    }
-
-    if (
-      !this._config.hide_alertVaguesSubmersion &&
-      alertEntity.attributes["Vagues-submersion"]
-    ) {
-      phenomenaList.push({
-        "name": "Vagues-submersion",
-        "icon": "mdi:waves",
-        "color": alertEntity.attributes["Vagues-submersion"],
-      });
-    }
-
-    return phenomenaList;
+    return alertDefs
+      .filter((a) => !this._config[a.hide] && alertEntity.attributes[a.key])
+      .map((a) => ({
+        "name": t.alerts[a.key] || a.key,
+        "icon": a.icon,
+        "color": alertEntity.attributes[a.key],
+      }));
   }
 
   getWeatherIcon(condition, isNight) {
@@ -992,7 +962,7 @@ class MeteofranceWeatherCard extends LitElement {
         return lengthUnit === "km" ? "mm" : "in";
       case "precipitation_probability":
         return "%";
-	  case "humidity":
+      case "humidity":
         return "%";
       case "speed":
         return lengthUnit === "km" ? "km/h" : "mph";
@@ -1147,7 +1117,7 @@ class MeteofranceWeatherCard extends LitElement {
         color: var(--state-icon-color);
       }
 
-      /* Current Forecast */
+      /* Météo actuelle */
       .current {
         flex-wrap: nowrap;
       }
@@ -1180,7 +1150,7 @@ class MeteofranceWeatherCard extends LitElement {
         color: var(--secondary-text-color);
       }
 
-      /* Details */
+      /* Détails */
       .details {
         justify-content: space-between;
         font-weight: 300;
@@ -1234,7 +1204,7 @@ class MeteofranceWeatherCard extends LitElement {
         float: right;
       }
 
-      /* One Hour Forecast */
+      /* Prévisions dans l'heure */
       .oneHour {
         height: 1em;
       }
@@ -1256,7 +1226,7 @@ class MeteofranceWeatherCard extends LitElement {
         border: 0;
       }
 
-      /* One Hour Labels */
+      /* Étiquettes de l'heure */
       .rain-0min,
       .rain-5min,
       .rain-10min,
@@ -1276,7 +1246,7 @@ class MeteofranceWeatherCard extends LitElement {
         flex: 1 1 0;
       }
 
-      /* One Hour Header */
+      /* En-tête de l'heure */
       .oneHourHeader {
         justify-content: space-between;
       }
@@ -1285,7 +1255,7 @@ class MeteofranceWeatherCard extends LitElement {
         text-align: right;
       }
 
-      /* Alert */
+      /* Alerte */
       .alertForecast {
         text-align: center;
         flex-wrap: nowrap;
@@ -1319,7 +1289,7 @@ class MeteofranceWeatherCard extends LitElement {
         color: #fff;
       }
 
-      /* Forecast */
+      /* Prévisions */
       .forecast {
         justify-content: space-between;
         flex-wrap: nowrap;

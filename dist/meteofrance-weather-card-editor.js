@@ -128,6 +128,7 @@ export class MeteofranceWeatherCardEditor extends LitElement {
   get _hourly_precipitation() { return this._config.hourly_precipitation !== false; }
   get _hourly_humidity() { return this._config.hourly_humidity !== false; }
   get _hourly_wind_icons() { return this._config.hourly_wind_icons !== false; }
+  get _daily_wind_icons() { return this._config.daily_wind_icons !== false; }
   get _daily_wind() { return this._config.daily_wind !== false; }
   get _daily_wind_gust() { return this._config.daily_wind_gust !== false; }
   get _daily_precipitation() { return this._config.daily_precipitation !== false; }
@@ -152,8 +153,8 @@ export class MeteofranceWeatherCardEditor extends LitElement {
   get _detailEntity() { return this._config.detailEntity || ""; }
 
   getTranslations() {
-    const lang = (this.hass.selectedLanguage || this.hass.language || "fr").split("-")[0];
-    return editorTranslations[lang] || editorTranslations["fr"];
+    const lang = (this.hass.language || "en").split("-")[0];
+    return editorTranslations[lang] || editorTranslations["en"];
   }
 
   render() {
@@ -169,39 +170,48 @@ export class MeteofranceWeatherCardEditor extends LitElement {
           
           ${this.renderSectionHeader(t.currentWeather, this._current, "current")}
           ${this._current ? html`
-            <ul class="switches">
+            <div class="switches">
               ${this.renderSwitchOption(t.showName, this._show_name, "show_name")}
               ${this.renderSwitchOption(t.showTemperature, this._show_temperature, "show_temperature")}
-              ${this.renderSwitchOption(t.details, this._details, "details")}
-              ${this.renderSwitchOption(t.alerts, this._alert_forecast, "alert_forecast")}
-              ${this.renderSwitchOption(t.oneHourRain, this._one_hour_forecast, "one_hour_forecast")}
               ${this.renderSwitchOption(t.animatedIcons, this._animated_icons, "animated_icons")}
+            </div>
+          ` : ""}
+
+          ${this.renderSectionHeader(t.details, this._details, "details")}
+          ${this._details ? html`
+            <div class="switches">
               ${this.renderSwitchOption(t.showSun, this._show_sun, "show_sun")}
               ${this.renderSwitchOption(t.windGustZeroDash, this._wind_gust_zero_dash, "wind_gust_zero_dash")}
-            </ul>
+            </div>
           ` : ""}
+
+          <div class="switches">
+            ${this.renderSwitchOption(t.alerts, this._alert_forecast, "alert_forecast")}
+            ${this.renderSwitchOption(t.oneHourRain, this._one_hour_forecast, "one_hour_forecast")}
+          </div>
 
           ${this.renderSectionHeader(t.hourlyForecast, this._hourly_forecast, "hourly_forecast")}
           ${this._hourly_forecast ? html`
             ${this.renderNumberField(t.numberOfHours, this._number_of_hourly_forecasts, "number_of_hourly_forecasts", 1, 24)}
-            <ul class="switches">
+            <div class="switches">
               ${this.renderSwitchOption(t.wind, this._hourly_wind, "hourly_wind")}
               ${this._hourly_wind ? this.renderSwitchOption(t.windGusts, this._hourly_wind_gust, "hourly_wind_gust") : ""}
               ${this.renderSwitchOption(t.precipitation, this._hourly_precipitation, "hourly_precipitation")}
               ${this.renderSwitchOption(t.humidity, this._hourly_humidity, "hourly_humidity")}
               ${this.renderSwitchOption(t.windArrow, this._hourly_wind_icons, "hourly_wind_icons")}
-            </ul>
+            </div>
           ` : ""}
 
           ${this.renderSectionHeader(t.dailyForecast, this._daily_forecast, "daily_forecast")}
           ${this._daily_forecast ? html`
             ${this.renderNumberField(t.numberOfDays, this._number_of_daily_forecasts, "number_of_daily_forecasts", 1, 15)}
-            <ul class="switches">
+            <div class="switches">
               ${this.renderSwitchOption(t.wind, this._daily_wind, "daily_wind")}
               ${this._daily_wind ? this.renderSwitchOption(t.windGusts, this._daily_wind_gust, "daily_wind_gust") : ""}
               ${this.renderSwitchOption(t.precipitation, this._daily_precipitation, "daily_precipitation")}
               ${this.renderSwitchOption(t.humidity, this._daily_humidity, "daily_humidity")}
-            </ul>
+              ${this.renderSwitchOption(t.windArrow, this._daily_wind_icons, "daily_wind_icons")}
+            </div>
           ` : ""}
 
           ${this.renderSensorPicker(t.rainRisk, this._rainChanceEntity, "rainChanceEntity")}
@@ -276,14 +286,13 @@ export class MeteofranceWeatherCardEditor extends LitElement {
 
   renderSwitchOption(label, state, configAttr) {
     return html`
-      <li class="switch">
+      <ha-formfield .label=${label}>
         <ha-switch
           .checked=${state}
           .configValue="${configAttr}"
           @change="${this._valueChanged}"
         ></ha-switch>
-        <span>${label}</span>
-      </li>
+      </ha-formfield>
     `;
   }
 
@@ -293,12 +302,10 @@ export class MeteofranceWeatherCardEditor extends LitElement {
       <div class="section-header"><span>${label}</span></div>
       <div @closed=${(ev) => ev.stopPropagation()}
            @dialog-closed=${(ev) => ev.stopPropagation()}
-           @opened=${(ev) => ev.stopPropagation()}
-           @iron-overlay-closed=${(ev) => ev.stopPropagation()}
-           @iron-overlay-opened=${(ev) => ev.stopPropagation()}>
+           @opened=${(ev) => ev.stopPropagation()}>
         <ha-selector
           .hass=${this.hass}
-          .selector=${{ "ui-action": { "actions": ["more-info", "navigate", "url", "call-service", "fire-dom-event", "none"] } }}
+          .selector=${{ "ui-action": { "actions": ["more-info", "navigate", "url", "perform-action", "fire-dom-event", "none"] } }}
           .value=${value}
           @value-changed=${(ev) => { ev.stopPropagation(); this._actionChanged(ev, configKey); }}
         ></ha-selector>
@@ -345,6 +352,8 @@ export class MeteofranceWeatherCardEditor extends LitElement {
     }
 
     DefaultSensors.forEach((sensorSuffix, configAttribute) => {
+      // Ne pas écraser les entités déjà configurées manuellement
+      if (configAttribute in this._config) return;
       const entity = "sensor." + weatherEntityName + sensorSuffix;
       if (this.hass.states[entity] !== undefined) {
         this._config = { ...this._config, [configAttribute]: entity };
@@ -372,9 +381,8 @@ export class MeteofranceWeatherCardEditor extends LitElement {
 
   static get styles() {
     return css`
-      .switches { margin: 8px 0; display: flex; flex-flow: row wrap; list-style: none; padding: 0; }
-      .switch { display: flex; align-items: center; width: 50%; height: 40px; }
-      .switches span { padding: 0 16px; }
+      .switches { margin: 4px 0 8px; display: flex; flex-flow: row wrap; padding: 0; }
+      .switches ha-formfield { width: 50%; min-height: 40px; align-items: center; }
       .section-header { display: flex; align-items: center; justify-content: space-between; font-weight: bold; padding: 8px 0 4px; border-top: 1px solid var(--divider-color); margin-top: 8px; }
       ha-textfield { display: block; width: 100%; margin-bottom: 8px; }
       ha-selector { display: block; margin-bottom: 8px; }
