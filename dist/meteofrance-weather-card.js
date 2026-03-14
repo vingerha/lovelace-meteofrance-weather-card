@@ -132,13 +132,13 @@ const translations = {
     "entityNotAvailable": "Entity not available: ",
     "alerts": {
       "Vent violent": "High winds",
-      "Pluie-inondation": "Rain/flood",
-      "Orages": "Thunderstorm",
-      "Inondation": "Flood",
+      "Pluie-inondation": "Rain/flooding",
+      "Orages": "Thunderstorms",
+      "Inondation": "Flooding",
       "Neige-verglas": "Snow/ice",
       "Canicule": "Heat wave",
       "Grand-froid": "Extreme cold",
-      "Avalanches": "Avalanche",
+      "Avalanches": "Avalanches",
       "Vagues-submersion": "Waves/flooding",
     },
     "rainIntensity": {
