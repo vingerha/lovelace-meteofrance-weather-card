@@ -21,11 +21,11 @@ const editorTranslations = {
   "fr": {
     "entity": "Entité",
     "name": "Nom",
-    "detail": "Détail",
     "general": "Général",
     "currentWeather": "Météo actuelle",
     "showName": "Ville",
     "showTemperature": "Température",
+    "localTemperature": "Capteur température local",
     "details": "Détails",
     "alerts": "Alertes",
     "oneHourRain": "Pluie dans l'heure",
@@ -56,11 +56,11 @@ const editorTranslations = {
   "en": {
     "entity": "Entity",
     "name": "Name",
-    "detail": "Detail",
     "general": "General",
     "currentWeather": "Current weather",
     "showName": "City",
     "showTemperature": "Temperature",
+    "localTemperature": "Local temperature sensor",
     "details": "Details",
     "alerts": "Alerts",
     "oneHourRain": "Rain in the hour",
@@ -91,7 +91,6 @@ const editorTranslations = {
 };
 
 const DefaultSensors = new Map([
-  ["detailEntity", "_rain_chance"],
   ["cloudCoverEntity", "_cloud_cover"],
   ["rainChanceEntity", "_rain_chance"],
   ["freezeChanceEntity", "_freeze_chance"],
@@ -150,7 +149,7 @@ export class MeteofranceWeatherCardEditor extends LitElement {
   get _rainForecastEntity() { return this._config.rainForecastEntity || ""; }
   get _snowChanceEntity() { return this._config.snowChanceEntity || ""; }
   get _uvEntity() { return this._config.uvEntity || ""; }
-  get _detailEntity() { return this._config.detailEntity || ""; }
+  get _temperature_entity() { return this._config.temperature_entity || ""; }
 
   getTranslations() {
     const lang = (this.hass.language || "en").split("-")[0];
@@ -166,8 +165,7 @@ export class MeteofranceWeatherCardEditor extends LitElement {
         <div>
           ${this.renderWeatherPicker(t.entity, this._entity, "entity")}
           ${this.renderTextField(t.name, this._name, "name")}
-          ${this.renderSensorPicker(t.detail, this._detailEntity, "detailEntity")}
-          
+
           ${this.renderSectionHeader(t.currentWeather, this._current, "current")}
           ${this._current ? html`
             <div class="switches">
@@ -175,6 +173,7 @@ export class MeteofranceWeatherCardEditor extends LitElement {
               ${this.renderSwitchOption(t.showTemperature, this._show_temperature, "show_temperature")}
               ${this.renderSwitchOption(t.animatedIcons, this._animated_icons, "animated_icons")}
             </div>
+            ${this.renderSensorPicker(t.localTemperature, this._temperature_entity, "temperature_entity")}
           ` : ""}
 
           ${this.renderSectionHeader(t.details, this._details, "details")}

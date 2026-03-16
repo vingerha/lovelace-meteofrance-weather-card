@@ -129,7 +129,6 @@ view:
       number_of_hourly_forecasts: "5"
       number_of_daily_forecasts: "5"
       # Les entités annexes de météo france
-      detailEntity: sensor.nantes_daily_precipitation
       cloudCoverEntity: sensor.nantes_cloud_cover
       rainChanceEntity: sensor.nantes_rain_chance
       freezeChanceEntity: sensor.nantes_freeze_chance
@@ -137,11 +136,25 @@ view:
       uvEntity: sensor.nantes_uv
       rainForecastEntity: sensor.nantes_next_rain
       alertEntity: sensor.44_weather_alert
+      # Capteur température local (optionnel)
+      temperature_entity: sensor.mon_capteur_temperature
       # Chemin
       icons: /local/community/lovelace-meteofrance-weather-card/icons/
 ```
 
 #### options avancées via YAML
+
+##### Capteur température local
+
+Par défaut, la température affichée en haut de la carte provient de l'entité météo Météo-France. Il est possible de la remplacer par un capteur physique local (ex. thermomètre intérieur/extérieur) :
+
+```yaml
+temperature_entity: sensor.mon_capteur_temperature
+```
+
+Si ce champ est renseigné, la valeur du capteur local s'affiche à la place de la température Météo-France. L'unité reste celle configurée dans Home Assistant.
+
+---
 
 Ci-dessous les éléments de configuration pour masquer certains champs:
 
