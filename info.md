@@ -20,11 +20,14 @@ Cette carte vous permet d'afficher les données de Météo France issue de l'int
 Les informations affichées :
 
 - conditions météo actuelles,
-- informations météorologiques détaillées,
+- informations météorologiques détaillées (dont les rafales de vent),
 - pluviométrie dans l'heure (prévisions à 5 puis 10 minutes),
 - alertes météos en cours (inondations, vents violents, etc) en rapport à votre département,
-- prévisions météo quotidiennes de 1 à 15 jours maximum (réglable) et des prévisions horaires de 1 à x heures (réglable),
-- sélection des informations à afficher pour personnaliser votre carte.
+- prévisions météo quotidiennes de 1 à 15 jours maximum (réglable) et des prévisions horaires de 1 à 24 heures (réglable),
+- sélection fine des informations à afficher (vent, rafales, humidité, précipitations, flèches de direction) pour les prévisions horaires et quotidiennes,
+- icônes animées ou statiques au choix,
+- carte et éditeur visuel **bilingues français/anglais** (langue détectée automatiquement depuis Home Assistant),
+- configuration avancée via YAML avec support des actions tactiles (clic, appui long, double clic).
 
 Un exemple de rendu :
 
@@ -113,22 +116,40 @@ Ci-dessous les éléments de configuration avec pour exemple l'usage d'une inté
 view:
     cards:
     - type: "custom:meteofrance-weather-card"
-      entity: weather.nantes # Entité météo principale
-      name: Nantes # nom de la carte, peut être différent du nom de l'intégration
-      # Les switches pour afficher ou non les différentes zones.
-      current: true
-      details: true
-      alert_forecast: true
-      one_hour_forecast: true
-      daily_forecast: true
-      hourly_forecast: true
-      humidity_forecast: true
-      wind_forecast_icons: true
-      animated_icons: true
-      # Les curseurs
-      number_of_hourly_forecasts: "5"
-      number_of_daily_forecasts: "5"
-      # Les entités annexes de météo france
+      entity: weather.nantes           # Entité météo principale (obligatoire)
+      name: Nantes                     # Nom affiché sur la carte
+
+      # --- Sections à afficher ---
+      current: true                    # Conditions actuelles
+      details: true                    # Informations détaillées
+      alert_forecast: true             # Alertes météo
+      one_hour_forecast: true          # Prévisions pluie dans l'heure
+      daily_forecast: true             # Prévisions quotidiennes
+      hourly_forecast: true            # Prévisions horaires
+
+      # --- Affichage section courante ---
+      show_name: true                  # Afficher le nom de la ville
+      show_temperature: true           # Afficher la température
+      show_sun: true                   # Afficher lever/coucher du soleil
+      animated_icons: true             # Icônes animées (false = statiques)
+      wind_gust_zero_dash: false       # Afficher un tiret quand rafale = 0
+
+      # --- Prévisions horaires ---
+      number_of_hourly_forecasts: 5    # Nombre d'heures affichées (1-24)
+      hourly_wind: true                # Vent dans les prévisions horaires
+      hourly_wind_gust: true           # Rafales dans les prévisions horaires
+      hourly_wind_icons: true          # Flèches direction vent horaires
+      hourly_precipitation: true       # Précipitations dans les prévisions horaires
+      hourly_humidity: true            # Humidité dans les prévisions horaires
+
+      # --- Prévisions quotidiennes ---
+      number_of_daily_forecasts: 5     # Nombre de jours affichés (1-15)
+      daily_wind: true                 # Vent dans les prévisions quotidiennes
+      daily_wind_gust: true            # Rafales dans les prévisions quotidiennes
+      daily_precipitation: true        # Précipitations dans les prévisions quotidiennes
+      daily_humidity: true             # Humidité dans les prévisions quotidiennes
+
+      # --- Entités annexes (auto-détectées, redéfinissables) ---
       detailEntity: sensor.nantes_daily_precipitation
       cloudCoverEntity: sensor.nantes_cloud_cover
       rainChanceEntity: sensor.nantes_rain_chance
@@ -137,20 +158,16 @@ view:
       uvEntity: sensor.nantes_uv
       rainForecastEntity: sensor.nantes_next_rain
       alertEntity: sensor.44_weather_alert
-      # Chemin
+      temperature_entity: sensor.nantes_temperature  # Entité température personnalisée (optionnel)
+
+      # --- Chemin des icônes (optionnel) ---
       icons: /local/community/lovelace-meteofrance-weather-card/icons/
 ```
 
-#### options avancées via YAML
+#### Masquer certaines alertes
 
-Ci-dessous les éléments de configuration pour masquer certains champs:
+Pour masquer des types d'alertes spécifiques :
 
-Pour masquer les précipitations :
-```yaml
-hide_precipitation: true
-```
-
-Pour masquer certaines alertes:
 ```yaml
 hide_alertVentViolent: true
 hide_alertPluieInondation: true
@@ -162,6 +179,23 @@ hide_alertGrandFroid: true
 hide_alertAvalanches: true
 hide_alertVaguesSubmersion: true
 ```
+
+#### Actions tactiles
+
+Il est possible de définir des actions sur la carte (clic, appui long, double clic) :
+
+```yaml
+tap_action:
+  action: more-info
+hold_action:
+  action: navigate
+  navigation_path: /lovelace/meteo
+double_tap_action:
+  action: url
+  url_path: https://meteofrance.com
+```
+
+Actions disponibles : `more-info`, `navigate`, `url`, `perform-action`, `toggle`, `fire-dom-event`.
 
 ## Crédits
 
