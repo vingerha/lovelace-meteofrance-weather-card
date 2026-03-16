@@ -150,7 +150,6 @@ view:
       daily_humidity: true             # Humidité dans les prévisions quotidiennes
 
       # --- Entités annexes (auto-détectées, redéfinissables) ---
-      detailEntity: sensor.nantes_daily_precipitation
       cloudCoverEntity: sensor.nantes_cloud_cover
       rainChanceEntity: sensor.nantes_rain_chance
       freezeChanceEntity: sensor.nantes_freeze_chance
@@ -158,7 +157,11 @@ view:
       uvEntity: sensor.nantes_uv
       rainForecastEntity: sensor.nantes_next_rain
       alertEntity: sensor.44_weather_alert
-      temperature_entity: sensor.nantes_temperature  # Entité température personnalisée (optionnel)
+
+      # --- Capteur température local (optionnel) ---
+      # Remplace la température Météo-France par celle d'un capteur physique local.
+      # Si non renseigné, la température provient de l'entité météo principale.
+      temperature_entity: sensor.mon_capteur_temperature
 
       # --- Chemin des icônes (optionnel) ---
       icons: /local/community/lovelace-meteofrance-weather-card/icons/

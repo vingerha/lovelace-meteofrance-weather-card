@@ -24,7 +24,6 @@ const weatherIconsDay = {
 };
 
 const DefaultSensors = [
-  ["detailEntity", "_rain_chance"],
   ["cloudCoverEntity", "_cloud_cover"],
   ["rainChanceEntity", "_rain_chance"],
   ["freezeChanceEntity", "_freeze_chance"],
@@ -525,7 +524,7 @@ _unsubscribeDailyForecastEvents() {
           ` : ""}
           <ul>
             ${this.renderMeteoFranceDetail(
-              this.hass.states[this._config.detailEntity]
+              this.hass.states[this._config.rainChanceEntity]
             )}
           </ul>
         </li>
