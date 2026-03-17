@@ -26,11 +26,13 @@ const editorTranslations = {
     "showName": "Ville",
     "showTemperature": "Température",
     "localTemperature": "Capteur température local",
+    "detail": "Détail",
     "details": "Détails",
     "alerts": "Alertes",
     "oneHourRain": "Pluie dans l'heure",
     "animatedIcons": "Icônes animées",
     "showSun": "Lever/Coucher du soleil",
+    "showDetailsColumns": "Données complémentaires",
     "windGustZeroDash": "Rafales : - si 0 km/h",
     "tapAction": "Action au clic",
     "holdAction": "Action au clic long",
@@ -61,11 +63,13 @@ const editorTranslations = {
     "showName": "City",
     "showTemperature": "Temperature",
     "localTemperature": "Local temperature sensor",
+    "detail": "Detail",
     "details": "Details",
     "alerts": "Alerts",
     "oneHourRain": "Rain in the hour",
     "animatedIcons": "Animated icons",
     "showSun": "Sunrise/Sunset",
+    "showDetailsColumns": "Supplementary data",
     "windGustZeroDash": "Gusts: show - if 0",
     "tapAction": "Tap action",
     "holdAction": "Hold action",
@@ -90,7 +94,10 @@ const editorTranslations = {
   },
 };
 
+const domains = ["sensor", "input_number"];
+
 const DefaultSensors = new Map([
+  ["detailEntity", "_rain_chance"],
   ["cloudCoverEntity", "_cloud_cover"],
   ["rainChanceEntity", "_rain_chance"],
   ["freezeChanceEntity", "_freeze_chance"],
@@ -136,12 +143,14 @@ export class MeteofranceWeatherCardEditor extends LitElement {
   get _alert_forecast() { return this._config.alert_forecast !== false; }
   get _animated_icons() { return this._config.animated_icons !== false; }
   get _show_sun() { return this._config.show_sun !== false; }
+  get _show_details_columns() { return this._config.show_details_columns !== false; }
   get _show_name() { return this._config.show_name !== false; }
   get _show_temperature() { return this._config.show_temperature !== false; }
   get _wind_gust_zero_dash() { return this._config.wind_gust_zero_dash !== false; }
   get _tap_action() { return this._config.tap_action || {}; }
   get _hold_action() { return this._config.hold_action || {}; }
   get _double_tap_action() { return this._config.double_tap_action || {}; }
+  get _detailEntity() { return this._config.detailEntity || ""; }
   get _alertEntity() { return this._config.alertEntity || ""; }
   get _cloudCoverEntity() { return this._config.cloudCoverEntity || ""; }
   get _freezeChanceEntity() { return this._config.freezeChanceEntity || ""; }
@@ -165,6 +174,7 @@ export class MeteofranceWeatherCardEditor extends LitElement {
         <div>
           ${this.renderWeatherPicker(t.entity, this._entity, "entity")}
           ${this.renderTextField(t.name, this._name, "name")}
+          ${this.renderSensorPicker(t.detail, this._detailEntity, "detailEntity")}
 
           ${this.renderSectionHeader(t.currentWeather, this._current, "current")}
           ${this._current ? html`
@@ -179,15 +189,18 @@ export class MeteofranceWeatherCardEditor extends LitElement {
           ${this.renderSectionHeader(t.details, this._details, "details")}
           ${this._details ? html`
             <div class="switches">
-              ${this.renderSwitchOption(t.showSun, this._show_sun, "show_sun")}
+              ${this.renderSwitchOption(t.showDetailsColumns, this._show_details_columns, "show_details_columns")}
               ${this.renderSwitchOption(t.windGustZeroDash, this._wind_gust_zero_dash, "wind_gust_zero_dash")}
+              ${this.renderSwitchOption(t.showSun, this._show_sun, "show_sun")}
             </div>
           ` : ""}
 
-          <div class="switches">
-            ${this.renderSwitchOption(t.alerts, this._alert_forecast, "alert_forecast")}
-            ${this.renderSwitchOption(t.oneHourRain, this._one_hour_forecast, "one_hour_forecast")}
-          </div>
+          ${this._details ? html`
+            <div class="switches">
+              ${this.renderSwitchOption(t.alerts, this._alert_forecast, "alert_forecast")}
+              ${this.renderSwitchOption(t.oneHourRain, this._one_hour_forecast, "one_hour_forecast")}
+            </div>
+          ` : ""}
 
           ${this.renderSectionHeader(t.hourlyForecast, this._hourly_forecast, "hourly_forecast")}
           ${this._hourly_forecast ? html`
@@ -205,11 +218,11 @@ export class MeteofranceWeatherCardEditor extends LitElement {
           ${this._daily_forecast ? html`
             ${this.renderNumberField(t.numberOfDays, this._number_of_daily_forecasts, "number_of_daily_forecasts", 1, 15)}
             <div class="switches">
-              ${this.renderSwitchOption(t.wind, this._daily_wind, "daily_wind")}
-              ${this._daily_wind ? this.renderSwitchOption(t.windGusts, this._daily_wind_gust, "daily_wind_gust") : ""}
+              <!-- ${this.renderSwitchOption(t.wind, this._daily_wind, "daily_wind")} -->
+              <!-- ${this._daily_wind ? this.renderSwitchOption(t.windGusts, this._daily_wind_gust, "daily_wind_gust") : ""} -->
               ${this.renderSwitchOption(t.precipitation, this._daily_precipitation, "daily_precipitation")}
               ${this.renderSwitchOption(t.humidity, this._daily_humidity, "daily_humidity")}
-              ${this.renderSwitchOption(t.windArrow, this._daily_wind_icons, "daily_wind_icons")}
+              <!-- ${this.renderSwitchOption(t.windArrow, this._daily_wind_icons, "daily_wind_icons")} -->
             </div>
           ` : ""}
 
@@ -254,17 +267,28 @@ export class MeteofranceWeatherCardEditor extends LitElement {
     `;
   }
 
-  renderWeatherPicker(label, entity, configAttr) { return this.renderPicker(label, entity, configAttr, "weather"); }
-  renderSensorPicker(label, entity, configAttr) { return this.renderPicker(label, entity, configAttr, "sensor"); }
-  renderPicker(label, entity, configAttr, domain) {
+  renderWeatherPicker(label, entity, configAttr) {
     return html`
       <ha-selector
         .hass=${this.hass}
-        .selector=${{ entity: { domain: domain } }}
+        .selector=${{ entity: { domain: "weather" } }}
         .value=${entity || null}
         .label=${label}
         @value-changed=${(ev) => this._pickerChanged(ev, configAttr)}
       ></ha-selector>
+    `;
+  }
+
+  renderSensorPicker(label, entity, configAttr) {
+    return html`
+      <ha-entity-picker
+        .hass=${this.hass}
+        .value=${entity || ""}
+        .label=${label}
+        .includeDomains=${domains}
+        allow-custom-entity
+        @value-changed=${(ev) => this._pickerChanged(ev, configAttr)}
+      ></ha-entity-picker>
     `;
   }
 

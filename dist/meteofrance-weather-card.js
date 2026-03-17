@@ -24,6 +24,7 @@ const weatherIconsDay = {
 };
 
 const DefaultSensors = [
+  ["detailEntity", "_rain_chance"],
   ["cloudCoverEntity", "_cloud_cover"],
   ["rainChanceEntity", "_rain_chance"],
   ["freezeChanceEntity", "_freeze_chance"],
@@ -480,10 +481,10 @@ _unsubscribeDailyForecastEvents() {
         ${this.isSelected(this._config.details)
           ? this.renderDetails(stateObj)
           : ""}
-        ${this.isSelected(this._config.alert_forecast)
+        ${this.isSelected(this._config.details) && this.isSelected(this._config.alert_forecast)
           ? this.renderAlertForecast()
           : ""}
-        ${this.isSelected(this._config.one_hour_forecast)
+        ${this.isSelected(this._config.details) && this.isSelected(this._config.one_hour_forecast)
           ? this.renderOneHourForecast()
           : ""}
         ${this.isSelected(this._config.hourly_forecast)
@@ -524,7 +525,7 @@ _unsubscribeDailyForecastEvents() {
           ` : ""}
           <ul>
             ${this.renderMeteoFranceDetail(
-              this.hass.states[this._config.rainChanceEntity]
+              this.hass.states[this._config.detailEntity]
             )}
           </ul>
         </li>
@@ -549,7 +550,7 @@ _unsubscribeDailyForecastEvents() {
 
     return html`
       <div class="flow-row details-wrapper${this.numberElements > 1 ? " spacer" : ""}">
-        <ul class="details-col">
+        ${this._config.show_details_columns !== false ? html`<ul class="details-col">
           <!-- Nébulosité -->
           ${this.renderMeteoFranceDetail(
             this.hass.states[this._config.cloudCoverEntity]
@@ -566,8 +567,8 @@ _unsubscribeDailyForecastEvents() {
           ${this.renderMeteoFranceDetail(
             this.hass.states[this._config.snowChanceEntity]
           )}
-        </ul>
-        <ul class="details-col details-col-right">
+        </ul>` : ""}
+        ${this._config.show_details_columns !== false ? html`<ul class="details-col details-col-right">
           <!-- Vent + Rafales -->
           <li>
             <ha-icon icon="mdi:weather-windy" title="${t.wind}"></ha-icon>
@@ -596,7 +597,7 @@ _unsubscribeDailyForecastEvents() {
           )}
           <!-- UV -->
           ${this.renderMeteoFranceDetail(this.hass.states[this._config.uvEntity], t.uvIndex, t.uvIndexUnit)}
-        </ul>
+        </ul>` : ""}
       </div>
       <ul class="flow-row details">
         <!-- Lever du soleil -->
