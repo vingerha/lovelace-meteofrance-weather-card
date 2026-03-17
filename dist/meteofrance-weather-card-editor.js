@@ -261,17 +261,28 @@ export class MeteofranceWeatherCardEditor extends LitElement {
     `;
   }
 
-  renderWeatherPicker(label, entity, configAttr) { return this.renderPicker(label, entity, configAttr, "weather"); }
-  renderSensorPicker(label, entity, configAttr) { return this.renderPicker(label, entity, configAttr, "sensor"); }
-  renderPicker(label, entity, configAttr, domain) {
+  renderWeatherPicker(label, entity, configAttr) {
     return html`
       <ha-selector
         .hass=${this.hass}
-        .selector=${{ entity: { domain: domain } }}
+        .selector=${{ entity: { domain: "weather" } }}
         .value=${entity || null}
         .label=${label}
         @value-changed=${(ev) => this._pickerChanged(ev, configAttr)}
       ></ha-selector>
+    `;
+  }
+
+  renderSensorPicker(label, entity, configAttr) {
+    return html`
+      <ha-entity-picker
+        .hass=${this.hass}
+        .value=${entity || ""}
+        .label=${label}
+        .includeDomains=${domains}
+        allow-custom-entity
+        @value-changed=${(ev) => this._pickerChanged(ev, configAttr)}
+      ></ha-entity-picker>
     `;
   }
 
