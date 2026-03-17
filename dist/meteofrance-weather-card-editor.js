@@ -214,11 +214,11 @@ export class MeteofranceWeatherCardEditor extends LitElement {
           ${this._daily_forecast ? html`
             ${this.renderNumberField(t.numberOfDays, this._number_of_daily_forecasts, "number_of_daily_forecasts", 1, 15)}
             <div class="switches">
-              ${this.renderSwitchOption(t.wind, this._daily_wind, "daily_wind")}
-              ${this._daily_wind ? this.renderSwitchOption(t.windGusts, this._daily_wind_gust, "daily_wind_gust") : ""}
+              <!-- ${this.renderSwitchOption(t.wind, this._daily_wind, "daily_wind")} -->
+              <!-- ${this._daily_wind ? this.renderSwitchOption(t.windGusts, this._daily_wind_gust, "daily_wind_gust") : ""} -->
               ${this.renderSwitchOption(t.precipitation, this._daily_precipitation, "daily_precipitation")}
               ${this.renderSwitchOption(t.humidity, this._daily_humidity, "daily_humidity")}
-              ${this.renderSwitchOption(t.windArrow, this._daily_wind_icons, "daily_wind_icons")}
+              <!-- ${this.renderSwitchOption(t.windArrow, this._daily_wind_icons, "daily_wind_icons")} -->
             </div>
           ` : ""}
 
