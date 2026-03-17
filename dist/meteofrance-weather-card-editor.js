@@ -32,6 +32,7 @@ const editorTranslations = {
     "oneHourRain": "Pluie dans l'heure",
     "animatedIcons": "Icônes animées",
     "showSun": "Lever/Coucher du soleil",
+    "showDetailsColumns": "Données complémentaires",
     "windGustZeroDash": "Rafales : - si 0 km/h",
     "tapAction": "Action au clic",
     "holdAction": "Action au clic long",
@@ -68,6 +69,7 @@ const editorTranslations = {
     "oneHourRain": "Rain in the hour",
     "animatedIcons": "Animated icons",
     "showSun": "Sunrise/Sunset",
+    "showDetailsColumns": "Supplementary data",
     "windGustZeroDash": "Gusts: show - if 0",
     "tapAction": "Tap action",
     "holdAction": "Hold action",
@@ -141,6 +143,7 @@ export class MeteofranceWeatherCardEditor extends LitElement {
   get _alert_forecast() { return this._config.alert_forecast !== false; }
   get _animated_icons() { return this._config.animated_icons !== false; }
   get _show_sun() { return this._config.show_sun !== false; }
+  get _show_details_columns() { return this._config.show_details_columns !== false; }
   get _show_name() { return this._config.show_name !== false; }
   get _show_temperature() { return this._config.show_temperature !== false; }
   get _wind_gust_zero_dash() { return this._config.wind_gust_zero_dash !== false; }
@@ -186,8 +189,9 @@ export class MeteofranceWeatherCardEditor extends LitElement {
           ${this.renderSectionHeader(t.details, this._details, "details")}
           ${this._details ? html`
             <div class="switches">
-              ${this.renderSwitchOption(t.showSun, this._show_sun, "show_sun")}
+              ${this.renderSwitchOption(t.showDetailsColumns, this._show_details_columns, "show_details_columns")}
               ${this.renderSwitchOption(t.windGustZeroDash, this._wind_gust_zero_dash, "wind_gust_zero_dash")}
+              ${this.renderSwitchOption(t.showSun, this._show_sun, "show_sun")}
             </div>
           ` : ""}
 

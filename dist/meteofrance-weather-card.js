@@ -550,7 +550,7 @@ _unsubscribeDailyForecastEvents() {
 
     return html`
       <div class="flow-row details-wrapper${this.numberElements > 1 ? " spacer" : ""}">
-        <ul class="details-col">
+        ${this._config.show_details_columns !== false ? html`<ul class="details-col">
           <!-- Nébulosité -->
           ${this.renderMeteoFranceDetail(
             this.hass.states[this._config.cloudCoverEntity]
@@ -567,8 +567,8 @@ _unsubscribeDailyForecastEvents() {
           ${this.renderMeteoFranceDetail(
             this.hass.states[this._config.snowChanceEntity]
           )}
-        </ul>
-        <ul class="details-col details-col-right">
+        </ul>` : ""}
+        ${this._config.show_details_columns !== false ? html`<ul class="details-col details-col-right">
           <!-- Vent + Rafales -->
           <li>
             <ha-icon icon="mdi:weather-windy" title="${t.wind}"></ha-icon>
@@ -597,7 +597,7 @@ _unsubscribeDailyForecastEvents() {
           )}
           <!-- UV -->
           ${this.renderMeteoFranceDetail(this.hass.states[this._config.uvEntity], t.uvIndex, t.uvIndexUnit)}
-        </ul>
+        </ul>` : ""}
       </div>
       <ul class="flow-row details">
         <!-- Lever du soleil -->
