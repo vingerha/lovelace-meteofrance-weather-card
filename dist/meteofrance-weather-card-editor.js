@@ -92,6 +92,8 @@ const editorTranslations = {
   },
 };
 
+const domains = ["sensor", "input_number"];
+
 const DefaultSensors = new Map([
   ["detailEntity", "_rain_chance"],
   ["cloudCoverEntity", "_cloud_cover"],
