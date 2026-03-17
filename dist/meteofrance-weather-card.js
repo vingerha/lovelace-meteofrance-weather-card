@@ -24,6 +24,7 @@ const weatherIconsDay = {
 };
 
 const DefaultSensors = [
+  ["detailEntity", "_rain_chance"],
   ["cloudCoverEntity", "_cloud_cover"],
   ["rainChanceEntity", "_rain_chance"],
   ["freezeChanceEntity", "_freeze_chance"],
@@ -480,10 +481,10 @@ _unsubscribeDailyForecastEvents() {
         ${this.isSelected(this._config.details)
           ? this.renderDetails(stateObj)
           : ""}
-        ${this.isSelected(this._config.alert_forecast)
+        ${this.isSelected(this._config.details) && this.isSelected(this._config.alert_forecast)
           ? this.renderAlertForecast()
           : ""}
-        ${this.isSelected(this._config.one_hour_forecast)
+        ${this.isSelected(this._config.details) && this.isSelected(this._config.one_hour_forecast)
           ? this.renderOneHourForecast()
           : ""}
         ${this.isSelected(this._config.hourly_forecast)
@@ -524,7 +525,7 @@ _unsubscribeDailyForecastEvents() {
           ` : ""}
           <ul>
             ${this.renderMeteoFranceDetail(
-              this.hass.states[this._config.rainChanceEntity]
+              this.hass.states[this._config.detailEntity]
             )}
           </ul>
         </li>

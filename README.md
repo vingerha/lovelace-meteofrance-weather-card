@@ -129,6 +129,7 @@ view:
       number_of_hourly_forecasts: "5"
       number_of_daily_forecasts: "5"
       # Les entités annexes de météo france
+      detailEntity: sensor.nantes_rain_chance
       cloudCoverEntity: sensor.nantes_cloud_cover
       rainChanceEntity: sensor.nantes_rain_chance
       freezeChanceEntity: sensor.nantes_freeze_chance

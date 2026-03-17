@@ -150,6 +150,7 @@ view:
       daily_humidity: true             # Humidité dans les prévisions quotidiennes
 
       # --- Entités annexes (auto-détectées, redéfinissables) ---
+      detailEntity: sensor.nantes_rain_chance
       cloudCoverEntity: sensor.nantes_cloud_cover
       rainChanceEntity: sensor.nantes_rain_chance
       freezeChanceEntity: sensor.nantes_freeze_chance

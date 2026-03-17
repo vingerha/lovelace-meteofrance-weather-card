@@ -26,6 +26,7 @@ const editorTranslations = {
     "showName": "Ville",
     "showTemperature": "Température",
     "localTemperature": "Capteur température local",
+    "detail": "Détail",
     "details": "Détails",
     "alerts": "Alertes",
     "oneHourRain": "Pluie dans l'heure",
@@ -61,6 +62,7 @@ const editorTranslations = {
     "showName": "City",
     "showTemperature": "Temperature",
     "localTemperature": "Local temperature sensor",
+    "detail": "Detail",
     "details": "Details",
     "alerts": "Alerts",
     "oneHourRain": "Rain in the hour",
@@ -91,6 +93,7 @@ const editorTranslations = {
 };
 
 const DefaultSensors = new Map([
+  ["detailEntity", "_rain_chance"],
   ["cloudCoverEntity", "_cloud_cover"],
   ["rainChanceEntity", "_rain_chance"],
   ["freezeChanceEntity", "_freeze_chance"],
@@ -142,6 +145,7 @@ export class MeteofranceWeatherCardEditor extends LitElement {
   get _tap_action() { return this._config.tap_action || {}; }
   get _hold_action() { return this._config.hold_action || {}; }
   get _double_tap_action() { return this._config.double_tap_action || {}; }
+  get _detailEntity() { return this._config.detailEntity || ""; }
   get _alertEntity() { return this._config.alertEntity || ""; }
   get _cloudCoverEntity() { return this._config.cloudCoverEntity || ""; }
   get _freezeChanceEntity() { return this._config.freezeChanceEntity || ""; }
@@ -165,6 +169,7 @@ export class MeteofranceWeatherCardEditor extends LitElement {
         <div>
           ${this.renderWeatherPicker(t.entity, this._entity, "entity")}
           ${this.renderTextField(t.name, this._name, "name")}
+          ${this.renderSensorPicker(t.detail, this._detailEntity, "detailEntity")}
 
           ${this.renderSectionHeader(t.currentWeather, this._current, "current")}
           ${this._current ? html`
@@ -184,10 +189,12 @@ export class MeteofranceWeatherCardEditor extends LitElement {
             </div>
           ` : ""}
 
-          <div class="switches">
-            ${this.renderSwitchOption(t.alerts, this._alert_forecast, "alert_forecast")}
-            ${this.renderSwitchOption(t.oneHourRain, this._one_hour_forecast, "one_hour_forecast")}
-          </div>
+          ${this._details ? html`
+            <div class="switches">
+              ${this.renderSwitchOption(t.alerts, this._alert_forecast, "alert_forecast")}
+              ${this.renderSwitchOption(t.oneHourRain, this._one_hour_forecast, "one_hour_forecast")}
+            </div>
+          ` : ""}
 
           ${this.renderSectionHeader(t.hourlyForecast, this._hourly_forecast, "hourly_forecast")}
           ${this._hourly_forecast ? html`
