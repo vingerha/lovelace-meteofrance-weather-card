@@ -1306,7 +1306,7 @@ _unsubscribeDailyForecastEvents() {
 
       .forecast ul.day {
         align-items: center;
-        width: 8ch;
+        width: auto;
       }
 
       .forecast ul.day > *:first-child {
