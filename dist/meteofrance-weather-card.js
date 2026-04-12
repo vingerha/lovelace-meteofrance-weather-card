@@ -1324,7 +1324,6 @@ _unsubscribeDailyForecastEvents() {
       .forecast ul.day .icon {
         width: 50px;
         height: 50px;
-        margin-right: 5px;
       }
     `;
   }
