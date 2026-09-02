@@ -54,6 +54,8 @@ const editorTranslations = {
     "weatherAlert": "Vigilance Météo",
     "iconsDir": "Répertoire des icones",
     "iconsDirPath": "Chemin",
+    "forecastTimezone": "Fuseau horaire des prévisions",
+    "showForecastTimezone": "Afficher l'abréviation du fuseau",
   },
   "en": {
     "entity": "Entity",
@@ -91,6 +93,8 @@ const editorTranslations = {
     "weatherAlert": "Weather alert",
     "iconsDir": "Icons directory",
     "iconsDirPath": "Path",
+    "forecastTimezone": "Forecast timezone",
+    "showForecastTimezone": "Show timezone abbreviation",
   },
 };
 
@@ -159,6 +163,8 @@ export class MeteofranceWeatherCardEditor extends LitElement {
   get _snowChanceEntity() { return this._config.snowChanceEntity || ""; }
   get _uvEntity() { return this._config.uvEntity || ""; }
   get _temperature_entity() { return this._config.temperature_entity || ""; }
+  get _forecast_timezone() { return this._config.forecast_timezone || this.hass.config.time_zone; }
+  get _show_forecast_timezone() { return this._config.show_forecast_timezone !== false; }
 
   getTranslations() {
     const lang = (this.hass.language || "en").split("-")[0];
@@ -174,6 +180,7 @@ export class MeteofranceWeatherCardEditor extends LitElement {
         <div>
           ${this.renderWeatherPicker(t.entity, this._entity, "entity")}
           ${this.renderTextField(t.name, this._name, "name")}
+          ${this.renderTimezoneSelector(t.forecastTimezone, this._forecast_timezone)}
           ${this.renderSensorPicker(t.detail, this._detailEntity, "detailEntity")}
 
           ${this.renderSectionHeader(t.currentWeather, this._current, "current")}
@@ -192,6 +199,7 @@ export class MeteofranceWeatherCardEditor extends LitElement {
               ${this.renderSwitchOption(t.showDetailsColumns, this._show_details_columns, "show_details_columns")}
               ${this.renderSwitchOption(t.windGustZeroDash, this._wind_gust_zero_dash, "wind_gust_zero_dash")}
               ${this.renderSwitchOption(t.showSun, this._show_sun, "show_sun")}
+              ${this.renderSwitchOption(t.showForecastTimezone, this._show_forecast_timezone, "show_forecast_timezone")}
             </div>
           ` : ""}
 
@@ -275,6 +283,34 @@ export class MeteofranceWeatherCardEditor extends LitElement {
         .value=${entity || null}
         .label=${label}
         @value-changed=${(ev) => this._pickerChanged(ev, configAttr)}
+      ></ha-selector>
+    `;
+  }
+
+  renderTimezoneSelector(label, value) {
+    const zones = (typeof Intl.supportedValuesOf === "function")
+      ? Intl.supportedValuesOf("timeZone")
+      : null;
+
+    if (!zones) {
+      // Older browser fallback: free-text IANA zone name.
+      return html`
+        <ha-textfield
+          label="${label}"
+          .value="${value}"
+          .configValue=${"forecast_timezone"}
+          @input=${this._valueChanged}
+        ></ha-textfield>
+      `;
+    }
+
+    return html`
+      <ha-selector
+        .hass=${this.hass}
+        .selector=${{ select: { mode: "dropdown", custom_value: true, options: zones } }}
+        .value=${value}
+        .label=${label}
+        @value-changed=${(ev) => this._pickerChanged(ev, "forecast_timezone")}
       ></ha-selector>
     `;
   }

@@ -731,6 +731,19 @@ _unsubscribeDailyForecastEvents() {
     </ul></div>`;
   }
 
+  getTimezoneAbbr(datetime, timeZone, lang) {
+    try {
+      const parts = new Intl.DateTimeFormat(lang, {
+        timeZone,
+        timeZoneName: "short",
+      }).formatToParts(new Date(datetime));
+      const tzPart = parts.find((p) => p.type === "timeZoneName");
+      return tzPart ? tzPart.value : "";
+    } catch (e) {
+      return "";
+    }
+  }
+
   renderDailyForecast(daily, lang, isDaily) {
     const p = isDaily ? "daily_" : "hourly_";
     const cfg = {
@@ -748,14 +761,16 @@ _unsubscribeDailyForecastEvents() {
             ? new Date(daily.datetime).toLocaleDateString(lang, {
                 weekday: "short",
                 day: "numeric",
-                timeZone: this.hass.config.time_zone,
+                timeZone: this._config.forecast_timezone || this.hass.config.time_zone,
               })
-            : new Date(daily.datetime).toLocaleTimeString(lang, {
+            : html`${new Date(daily.datetime).toLocaleTimeString(lang, {
                 "hour": "2-digit",
                 "minute": "2-digit",
-                "timeZone": this.hass.config.time_zone,
+                "timeZone": this._config.forecast_timezone || this.hass.config.time_zone,
                 ...this.getTimeFormatOptions(),
-              })}
+              })} ${this._config.show_forecast_timezone !== false
+                ? html`<span class="tz-abbr">${this.getTimezoneAbbr(daily.datetime, this._config.forecast_timezone || this.hass.config.time_zone, lang)}</span>`
+                : ""}`}
         </li>
         <li
           class="icon"
@@ -1311,6 +1326,11 @@ _unsubscribeDailyForecastEvents() {
 
       .forecast ul.day > *:first-child {
         text-transform: uppercase;
+      }
+
+      .tz-abbr {
+        font-size: 0.65em;
+        color: var(--secondary-text-color);
       }
 
       .forecast ul.day .highTemp {
