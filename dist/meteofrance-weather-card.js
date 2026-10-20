@@ -666,7 +666,7 @@ _unsubscribeDailyForecastEvents() {
             (forecast) => html` <li
               class="rain-${forecast[0]}min"
               style="opacity: ${forecast[1]}"
-              title="${forecast[2]}"
+              title="${this.getTranslations().rainIntensity[forecast[2]] || forecast[2]}"
             ></li>`
           )}
         `}
@@ -758,11 +758,10 @@ _unsubscribeDailyForecastEvents() {
       <ul class="flow-column day">
         <li>
           ${isDaily
-            ? new Date(daily.datetime).toLocaleDateString(lang, {
-                weekday: "short",
-                day: "numeric",
-                timeZone: this._config.forecast_timezone || this.hass.config.time_zone,
-              })
+			? new Date(daily.datetime).toLocaleDateString(lang, {
+				weekday: "short", day: "numeric",
+				timeZone: this.getDailyForecastDateTimeZone(daily.datetime),
+			  })
             : html`${new Date(daily.datetime).toLocaleTimeString(lang, {
                 "hour": "2-digit",
                 "minute": "2-digit",
@@ -849,6 +848,12 @@ _unsubscribeDailyForecastEvents() {
       </ul>
     </li>`;
   }
+
+  getDailyForecastDateTimeZone(datetime) {
+	  const date = new Date(datetime);
+	  const configuredTz = this._config.forecast_timezone || this.hass.config.time_zone;
+	  return date.getUTCHours() === 0 && date.getUTCMinutes() === 0 ? "UTC" : configuredTz;
+	}
 
   isNightTime(datetimehourly) {
     const sun = this.hass.states["sun.sun"];
