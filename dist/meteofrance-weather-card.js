@@ -666,7 +666,7 @@ _unsubscribeDailyForecastEvents() {
             (forecast) => html` <li
               class="rain-${forecast[0]}min"
               style="opacity: ${forecast[1]}"
-              title="${forecast[2]}"
+              title="${this.getTranslations().rainIntensity[forecast[2]] || forecast[2]}"
             ></li>`
           )}
         `}
