@@ -89,6 +89,7 @@ const translations = {
       "Vagues-submersion": "Vagues-submersion",
     },
     "rainIntensity": {
+      "Temps sec": "Temps sec",
       "Pluie faible": "Pluie faible",
       "Pluie modérée": "Pluie modérée",
       "Pluie forte": "Pluie forte",
@@ -142,6 +143,7 @@ const translations = {
       "Vagues-submersion": "Waves/flooding",
     },
     "rainIntensity": {
+      "Temps sec": "Dry",
       "Pluie faible": "Light rain",
       "Pluie modérée": "Moderate rain",
       "Pluie forte": "Heavy rain",
